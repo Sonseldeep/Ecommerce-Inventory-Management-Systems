@@ -1,0 +1,16 @@
+﻿using System.Security.Claims;
+
+namespace Ecomm.Api.Extensions;
+
+public static class ClaimsPrincipalExtensions
+{
+    public static Guid GetUserId(this ClaimsPrincipal user)
+    {
+        var id =
+            user.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            user.FindFirstValue("sub");
+
+        if (Guid.TryParse(id, out var userId)) return userId;
+        throw new UnauthorizedAccessException("Invalid user id claim.");
+    }
+}

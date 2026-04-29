@@ -1,0 +1,16 @@
+# Backend secrets
+Backend/Ecomm.Api/appsettings.json
+Backend/Ecomm.Api/appsettings.Development.json
+
+# .NET
+Backend/**/bin
+Backend/**/obj
+
+# Frontend
+Frontend/node_modules
+Frontend/dist
+Frontend/.env
+
+# IDE
+.vscode
+.idea

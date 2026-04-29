@@ -1,0 +1,10 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+Backend/Ecomm.Api/appsettings.Development.json
+Backend/Ecomm.Api/appsettings.json
+appsettings.json
+appsettings.Development.json
+
