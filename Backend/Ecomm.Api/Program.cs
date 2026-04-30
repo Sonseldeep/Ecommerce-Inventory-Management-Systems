@@ -12,6 +12,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,10 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
     };
 });
+
+// serilog config
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.ReadFrom.Configuration(ctx.Configuration));
 
 // Validation Exception Handler always before Global Exception Handler
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
@@ -137,6 +142,8 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
     builder.Services.AddAuthorization();
 
     var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
 
     app.MapHub<NotificationsHub>("/hubs/notifications");
     app.MapHub<ProductsHub>("/hubs/products");
