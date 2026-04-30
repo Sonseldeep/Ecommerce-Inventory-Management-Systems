@@ -91,11 +91,11 @@ public class ProductService : IProductService
         return response;
     }
 
-    public async Task<IEnumerable<ProductResponseDto>> GetAllAsync(CancellationToken ct = default)
-    {
-        var list = await _products.GetAllWithDetailsAsync(ct);
-        return list.Select(x => x.ToDto());
-    }
+    // public async Task<IEnumerable<ProductResponseDto>> GetAllAsync(CancellationToken ct = default)
+    // {
+    //     var list = await _products.GetAllWithDetailsAsync(ct);
+    //     return list.Select(x => x.ToDto());
+    // }
 
     public async Task<ProductResponseDto> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
