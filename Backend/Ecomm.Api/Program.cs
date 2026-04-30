@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using System.Text;
-using Ecomm.Api.Extensions;
 using Ecomm.Api.Hubs;
+using Ecomm.Api.MIddleware;
 using Ecomm.Api.RealTime;
 using Ecomm.Application;
 using Ecomm.Application.Interfaces.Services;
@@ -18,6 +18,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Controllers
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+    };
+});
+
+// Validation Exception Handler always before Global Exception Handler
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+
+// Global Exception Handler
+builder.Services.AddExceptionHandler<GlobalExceptionMiddleware>();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
@@ -104,48 +118,10 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
                     }
                 }
             };
-            // options.Events = new JwtBearerEvents
-            // {
-            //     OnTokenValidated = async ctx =>
-            //     {
-            //         var userId = ctx.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            //         var pwdChangedClaim = ctx.Principal?.FindFirst("pwd_changed")?.Value;
-            //
-            //         if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(pwdChangedClaim))
-            //         {
-            //             ctx.Fail("Invalid token.");
-            //             return;
-            //         }
-            //
-            //         var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-            //         var user = await db.Users.FindAsync(Guid.Parse(userId));
-            //
-            //         if (user == null) { ctx.Fail("User not found."); return; }
-            //
-            //         var tokenChangedAt = DateTime.Parse(pwdChangedClaim);
-            //         if (user.PasswordChangedAtUtc > tokenChangedAt)
-            //         {
-            //             ctx.Fail("Token expired due to password change.");
-            //         }
-            //     }
-            // };
-
-            // options.Events = new JwtBearerEvents
-            // {
-            //     OnAuthenticationFailed = ctx =>
-            //     {
-            //         Console.WriteLine($"JWT Failed: {ctx.Exception.Message}");
-            //         return Task.CompletedTask;
-            //     },
-            //     OnChallenge = ctx =>
-            //     {
-            //         Console.WriteLine($"JWT Challenge Error: {ctx.Error}, Desc: {ctx.ErrorDescription}");
-            //         return Task.CompletedTask;
-            //     }
-            // };
+            
         });
 
-    var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+    var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
     builder.Services.AddCors(options =>
     {
@@ -161,13 +137,12 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
     builder.Services.AddAuthorization();
 
     var app = builder.Build();
+
     app.MapHub<NotificationsHub>("/hubs/notifications");
     app.MapHub<ProductsHub>("/hubs/products");
 
-// Global Exception Middleware
-    app.UseGlobalExceptionMiddleware();
 
-// Swagger
+
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
