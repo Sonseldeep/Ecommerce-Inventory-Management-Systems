@@ -84,36 +84,6 @@ public class EmailOtpService : IEmailOtpService
 
     await _emailSender.SendAsync(user.Email, "Your Verification Code", body, ct);
 }
-  
-    // public async Task SendOtpAsync(SendEmailOtpRequestDto request, CancellationToken ct = default)
-    // {
-    //     var user = await _users.GetByEmailAsync(request.Email.Trim().ToLower(), ct);
-    //     if (user == null) return; // avoid enumeration
-    //     if (user.IsEmailVerified) return;
-    //
-    //     if (user.EmailOtpLastSentAtUtc.HasValue &&
-    //         DateTime.UtcNow < user.EmailOtpLastSentAtUtc.Value.AddSeconds(CooldownSeconds))
-    //         throw new Exception("Please wait before requesting another OTP.");
-    //
-    //     var otp = GenerateOtp();
-    //     user.EmailOtpHash = HashOtp(otp);
-    //     user.EmailOtpExpiresAtUtc = DateTime.UtcNow.AddMinutes(OtpExpiryMinutes);
-    //     user.EmailOtpAttempts = 0;
-    //     user.EmailOtpLastSentAtUtc = DateTime.UtcNow;
-    //
-    //     _users.Update(user);
-    //     await _uow.SaveChangesAsync(ct);
-    //
-    //     var body = $@"
-    //     <div style='font-family:Arial'>
-    //         <h2>Email Verification</h2>
-    //         <p>Your OTP is:</p>
-    //         <h1 style='letter-spacing:4px'>{otp}</h1>
-    //         <p>Expires in {OtpExpiryMinutes} minutes.</p>
-    //     </div>";
-    //
-    //     await _emailSender.SendAsync(user.Email, "Your Ecomm OTP", body, ct);
-    // }
 
 
     public async Task VerifyOtpAsync(VerifyEmailOtpRequestDto request, CancellationToken ct = default)

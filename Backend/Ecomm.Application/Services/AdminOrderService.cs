@@ -4,6 +4,7 @@ using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Mappings;
 using Ecomm.Domain.Enums;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 
 namespace Ecomm.Application.Services;
@@ -14,7 +15,8 @@ public class AdminOrderService : IAdminOrderService
     private readonly IUnitOfWork _uow;
     private readonly ILogger<AdminOrderService> _logger;
 
-    public AdminOrderService(IOrderRepository orders, IUnitOfWork uow, ILogger<AdminOrderService> logger)
+
+    public AdminOrderService(IOrderRepository orders, IUnitOfWork uow, ILogger<AdminOrderService> logger, IValidator<UpdateOrderStatusRequestDto> updateOrderStatusRequestDtoValidator, IValidator<UpdateOrderStatusRequestDto> updateStatusValidator)
     {
         _orders = orders;
         _uow = uow;
@@ -29,6 +31,7 @@ public class AdminOrderService : IAdminOrderService
 
     public async Task<OrderResponseDto> UpdateStatusAsync(Guid orderId, OrderStatus newStatus, CancellationToken ct = default)
     {
+
         var order = await _orders.GetByIdWithItemsAsync(orderId, ct)
                     ?? throw new NotFoundException("Order not found.");
 

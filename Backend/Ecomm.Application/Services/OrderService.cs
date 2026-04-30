@@ -164,6 +164,7 @@ using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Mappings;
 using Ecomm.Domain.Entities;
 using Ecomm.Domain.Enums;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 
 namespace Ecomm.Application.Services;
@@ -180,6 +181,7 @@ public class OrderService : IOrderService
     private readonly IUnitOfWork _uow;
     private readonly ILogger<OrderService> _logger;
     private readonly IRealtimeNotifier _realtime;
+    private readonly IValidator<CheckoutRequestDto> _checkoutValidator;
 
     public OrderService(
         ICartRepository carts,
@@ -191,7 +193,9 @@ public class OrderService : IOrderService
         ICurrentUserService currentUser,
         IUnitOfWork uow,
         ILogger<OrderService> logger,
-        IRealtimeNotifier realtime)
+        IRealtimeNotifier realtime,
+        IValidator<CheckoutRequestDto> checkoutValidator,
+        IValidator<UpdateOrderStatusRequestDto> updateStatusValidator)
     {
         _carts = carts;
         _addresses = addresses;
@@ -203,10 +207,12 @@ public class OrderService : IOrderService
         _uow = uow;
         _logger = logger;
         _realtime = realtime;
+        _checkoutValidator = checkoutValidator;
     }
 
     public async Task<OrderResponseDto> CheckoutAsync(CheckoutRequestDto request, CancellationToken ct = default)
     {
+        await _checkoutValidator.ValidateAndThrowAsync(request, ct);
         var userId = _currentUser.GetUserId();
 
         var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);

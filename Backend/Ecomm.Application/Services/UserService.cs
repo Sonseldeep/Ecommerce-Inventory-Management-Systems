@@ -1,4 +1,5 @@
-﻿using Ecomm.Application.DTOs.User;
+﻿using Ecomm.Application.Common;
+using Ecomm.Application.DTOs.User;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 
@@ -18,7 +19,7 @@ public class UserService : IUserService
         var user = await _users.GetByIdAsync(userId, ct);
         if (user is null)
         {
-            throw new Exception("User not found");
+            throw new NotFoundException("User not found");
         }
 
         return new UserProfileDto
