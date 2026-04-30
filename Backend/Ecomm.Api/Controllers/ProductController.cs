@@ -40,18 +40,6 @@ public class ProductsController : ControllerBase
         ));
     }
 
-    // [HttpGet("search")]
-    // public async Task<IActionResult> Search(
-    //     [FromQuery] ProductQueryParamsDto query,
-    //     CancellationToken ct)
-    // {
-    //     var data = await _service.SearchAsync(query, ct);
-    //
-    //     return Ok(ApiResponse<PagedProductResponseDto>.Ok(
-    //         data,
-    //         "Products search completed successfully"
-    //     ));
-    // }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]

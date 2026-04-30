@@ -1,4 +1,5 @@
-﻿using Ecomm.Application.DTOs.Order;
+﻿using Ecomm.Application.Common;
+using Ecomm.Application.DTOs.Order;
 using Ecomm.Domain.Enums;
 
 namespace Ecomm.Application.Interfaces.Services;
@@ -6,6 +7,6 @@ namespace Ecomm.Application.Interfaces.Services;
 
 public interface IAdminOrderService
 {
-    Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync(CancellationToken ct = default);
-    Task<OrderResponseDto> UpdateStatusAsync(Guid orderId, OrderStatus newStatus, CancellationToken ct = default);
+    Task<PagedResult<OrderResponseDto>> GetAllOrdersAsync(OrderQueryParamsDto query, CancellationToken ct = default);
+    Task<OrderResponseDto> UpdateStatusAsync(Guid orderId, int status, CancellationToken ct = default);
 }

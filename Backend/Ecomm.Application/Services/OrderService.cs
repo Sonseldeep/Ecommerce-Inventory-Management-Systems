@@ -181,6 +181,23 @@ public class OrderService : IOrderService
         return created.ToDto();
     }
 
+    public async Task<PagedResult<OrderResponseDto>> GetMyOrdersAsync(OrderQueryParamsDto query, CancellationToken ct = default)
+    {
+        query.PageNumber = query.PageNumber <= 0 ? 1 : query.PageNumber;
+        query.PageSize = query.PageSize <= 0 ? 10 : Math.Min(query.PageSize, 100);
+
+        var userId = _currentUser.GetUserId(); // your current user accessor
+        var (items, total) = await _orders.SearchAsync(query, userId, ct);
+
+        return new PagedResult<OrderResponseDto>
+        {
+            Items = items.Select(x => x.ToDto()),
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize,
+            TotalCount = total
+        };
+    }
+
     public async Task<IEnumerable<OrderResponseDto>> GetMyOrdersAsync(CancellationToken ct = default)
     {
         var userId = _currentUser.GetUserId();

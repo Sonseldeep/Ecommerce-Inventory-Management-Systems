@@ -31,7 +31,28 @@ public class CategoryService : ICategoryService
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
-    
+
+    public async Task<PagedResult<CategoryResponseDto>> SearchAsync(CategoryQueryParamsDto query, CancellationToken ct = default)
+    {
+        query.PageNumber = query.PageNumber <= 0 ? 1 : query.PageNumber;
+        query.PageSize = query.PageSize <= 0 ? 10 : Math.Min(query.PageSize, 100);
+
+        var (items, total) = await _categories.SearchAsync(query, ct);
+
+        return new PagedResult<CategoryResponseDto>
+        {
+            Items = items.Select(x => new CategoryResponseDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Description = x.Description
+            }),
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize,
+            TotalCount = total
+        };
+    }
+
     public async Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default)
     {
         await _createValidator.ValidateAndThrowAsync(request, ct);
