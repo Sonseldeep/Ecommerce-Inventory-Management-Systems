@@ -19,9 +19,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("checkout")]
-    public async Task<IActionResult> Checkout(
-        [FromBody] CheckoutRequestDto request,
-        CancellationToken ct)
+    public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request, CancellationToken ct)
     {
         var data = await _service.CheckoutAsync(request, ct);
 
@@ -32,11 +30,11 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("my-orders")]
-    public async Task<IActionResult> MyOrders(CancellationToken ct)
+    public async Task<IActionResult> MyOrders([FromQuery] OrderQueryParamsDto query, CancellationToken ct)
     {
-        var data = await _service.GetMyOrdersAsync(ct);
+        var data = await _service.GetMyOrdersAsync(query, ct);
 
-        return Ok(ApiResponse<IEnumerable<OrderResponseDto>>.Ok(
+        return Ok(ApiResponse<PagedResult<OrderResponseDto>>.Ok(
             data,
             "Orders fetched successfully"
         ));

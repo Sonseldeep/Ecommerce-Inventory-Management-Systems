@@ -18,11 +18,11 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] CategoryQueryParamsDto query, CancellationToken ct)
     {
-        var data = await _service.GetAllAsync(ct);
+        var data = await _service.SearchAsync(query, ct);
 
-        return Ok(ApiResponse<IEnumerable<CategoryResponseDto>>.Ok(
+        return Ok(ApiResponse<PagedResult<CategoryResponseDto>>.Ok(
             data,
             "Categories fetched successfully"
         ));
@@ -30,9 +30,7 @@ public class CategoriesController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateCategoryRequestDto request,
-        CancellationToken ct)
+    public async Task<IActionResult> Create([FromBody] CreateCategoryRequestDto request, CancellationToken ct)
     {
         var data = await _service.CreateAsync(request, ct);
 
@@ -44,10 +42,7 @@ public class CategoriesController : ControllerBase
 
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(
-        [FromRoute] Guid id,
-        [FromBody] UpdateCategoryRequestDto request,
-        CancellationToken ct)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateCategoryRequestDto request, CancellationToken ct)
     {
         var data = await _service.UpdateAsync(id, request, ct);
 
@@ -59,9 +54,7 @@ public class CategoriesController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(
-        [FromRoute] Guid id,
-        CancellationToken ct)
+    public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken ct)
     {
         await _service.DeleteAsync(id, ct);
 
