@@ -2,7 +2,6 @@
 using Ecomm.Application.DTOs.Category;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
-using Ecomm.Application.Mappings;
 using Ecomm.Domain.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -130,8 +129,9 @@ public class CategoryService : ICategoryService
         }
 
         // prevent deleting category that still has active products
-        var products = await _products.GetAllWithDetailsAsync(ct);
-        var inUse = products.Any(p => !p.IsDeleted && p.CategoryId == id);
+     
+        var inUse = await _products.Query()
+            .AnyAsync(p => !p.IsDeleted && p.CategoryId == id, ct);
         if (inUse)
         {
             throw new BadRequestException("Cannot delete category because products are assigned to it.");
