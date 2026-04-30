@@ -17,8 +17,7 @@ public class ProductsController : ControllerBase
         _service = service;
     }
 
-    [HttpGet]
-    [AllowAnonymous]
+    [HttpGet] 
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var data = await _service.GetAllAsync(ct);
@@ -30,7 +29,6 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var data = await _service.GetByIdAsync(id, ct);
@@ -42,7 +40,6 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("search")]
-    [AllowAnonymous]
     public async Task<IActionResult> Search(
         [FromQuery] ProductQueryParamsDto query,
         CancellationToken ct)
