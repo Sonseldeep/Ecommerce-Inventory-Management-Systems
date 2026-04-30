@@ -1,14 +1,16 @@
 
 
 
-// import { useEffect, useMemo, useState } from "react";
+
+// import { useEffect, useMemo, useState, useCallback } from "react";
 // import { Link } from "react-router-dom";
 // import toast from "react-hot-toast";
 
 // import { addToCartApi } from "../../api/cartApi";
 // import { getCategoriesApi } from "../../api/categoryApi";
-// import { searchProductsApi } from "../../api/productApi";
+// import { getProductsApi } from "../../api/productApi";
 // import { useCart } from "../../context/CartContext";
+// import useProductRealtime from "../../hooks/userProductRealtime";
 
 // export default function ProductsPage() {
 //   const { refreshCartCount } = useCart();
@@ -16,23 +18,19 @@
 //   const [loading, setLoading] = useState(false);
 //   const [items, setItems] = useState([]);
 
-//   // pagination
 //   const [pageNumber, setPageNumber] = useState(1);
 //   const [pageSize] = useState(8);
 //   const [totalPages, setTotalPages] = useState(1);
 //   const [totalCount, setTotalCount] = useState(0);
 
-//   // filters
 //   const [search, setSearch] = useState("");
 //   const [categoryId, setCategoryId] = useState("");
 //   const [minPrice, setMinPrice] = useState("");
 //   const [maxPrice, setMaxPrice] = useState("");
-//   const [sortBy, setSortBy] = useState("createdAtUtc");
+//   const [sortBy, setSortBy] = useState("createdAt");
 //   const [sortOrder, setSortOrder] = useState("desc");
 
 //   const [categories, setCategories] = useState([]);
-
-//   // debounce search
 //   const [searchDraft, setSearchDraft] = useState("");
 
 //   useEffect(() => {
@@ -40,11 +38,9 @@
 //       setSearch(searchDraft.trim());
 //       setPageNumber(1);
 //     }, 400);
-
 //     return () => clearTimeout(t);
 //   }, [searchDraft]);
 
-//   // load categories
 //   useEffect(() => {
 //     (async () => {
 //       try {
@@ -56,33 +52,21 @@
 //     })();
 //   }, []);
 
-//   // build query
-//   const buildQuery = () => {
-//     const q = new URLSearchParams();
-
-//     if (search) q.append("search", search);
-//     if (categoryId) q.append("categoryId", categoryId);
-//     if (minPrice !== "") q.append("minPrice", minPrice);
-//     if (maxPrice !== "") q.append("maxPrice", maxPrice);
-
-//     q.append("sortBy", sortBy);
-//     q.append("sortOrder", sortOrder);
-//     q.append("pageNumber", pageNumber);
-//     q.append("pageSize", pageSize);
-
-//     return q.toString();
-//   };
-
-//   // load products
 //   const loadProducts = async () => {
 //     setLoading(true);
-
 //     try {
-//       const qs = buildQuery();
-//       const res = await searchProductsApi(qs);
+//       const res = await getProductsApi({
+//         search,
+//         categoryId,
+//         minPrice: minPrice !== "" ? minPrice : undefined,
+//         maxPrice: maxPrice !== "" ? maxPrice : undefined,
+//         sortBy,
+//         sortOrder,
+//         pageNumber,
+//         pageSize,
+//       });
 
 //       const payload = res.data?.data;
-
 //       if (payload && Array.isArray(payload.items)) {
 //         setItems(payload.items);
 //         setTotalPages(payload.totalPages || 1);
@@ -103,7 +87,6 @@
 //     loadProducts();
 //   }, [search, categoryId, minPrice, maxPrice, sortBy, sortOrder, pageNumber, pageSize]);
 
-//   // add to cart
 //   const addToCart = async (productId) => {
 //     try {
 //       await addToCartApi({ productId, quantity: 1 });
@@ -114,13 +97,10 @@
 //     }
 //   };
 
-//   // page info text
 //   const pageInfo = useMemo(() => {
 //     if (!totalCount) return "No products found";
-
 //     const start = (pageNumber - 1) * pageSize + 1;
 //     const end = Math.min(pageNumber * pageSize, totalCount);
-
 //     return `Showing ${start}-${end} of ${totalCount}`;
 //   }, [pageNumber, pageSize, totalCount]);
 
@@ -130,10 +110,24 @@
 //     setCategoryId("");
 //     setMinPrice("");
 //     setMaxPrice("");
-//     setSortBy("createdAtUtc");
+//     setSortBy("createdAt");
 //     setSortOrder("desc");
 //     setPageNumber(1);
 //   };
+
+//   const handleRealtimeProduct = useCallback(
+//     (product, isNew = false) => {
+//       setItems((prev) => {
+//         const exists = prev.some((p) => p.id === product.id);
+//         if (isNew && pageNumber === 1) return [product, ...prev];
+//         if (exists) return prev.map((p) => (p.id === product.id ? product : p));
+//         return prev;
+//       });
+//     },
+//     [pageNumber]
+//   );
+
+//   useProductRealtime(handleRealtimeProduct);
 
 //   return (
 //     <div className="p-6 space-y-5 bg-gray-50 min-h-screen">
@@ -141,73 +135,37 @@
 
 //       {/* FILTERS */}
 //       <div className="bg-white rounded-2xl shadow p-4 grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-//         <input
-//           className="border rounded-lg p-2"
-//           placeholder="Search..."
-//           value={searchDraft}
-//           onChange={(e) => setSearchDraft(e.target.value)}
+//         <input className="border rounded-lg p-2" placeholder="Search..."
+//           value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)}
 //         />
 
-//         <select
-//           className="border rounded-lg p-2"
-//           value={categoryId}
-//           onChange={(e) => {
-//             setCategoryId(e.target.value);
-//             setPageNumber(1);
-//           }}
+//         <select className="border rounded-lg p-2" value={categoryId}
+//           onChange={(e) => { setCategoryId(e.target.value); setPageNumber(1); }}
 //         >
 //           <option value="">All categories</option>
-//           {categories.map((c) => (
-//             <option key={c.id} value={c.id}>
-//               {c.name}
-//             </option>
-//           ))}
+//           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
 //         </select>
 
 //         <div className="flex gap-2">
-//           <input
-//             type="number"
-//             className="border rounded-lg p-2 w-full"
-//             placeholder="Min"
-//             value={minPrice}
-//             onChange={(e) => {
-//               setMinPrice(e.target.value);
-//               setPageNumber(1);
-//             }}
+//           <input type="number" className="border rounded-lg p-2 w-full" placeholder="Min"
+//             value={minPrice} onChange={(e) => { setMinPrice(e.target.value); setPageNumber(1); }}
 //           />
-//           <input
-//             type="number"
-//             className="border rounded-lg p-2 w-full"
-//             placeholder="Max"
-//             value={maxPrice}
-//             onChange={(e) => {
-//               setMaxPrice(e.target.value);
-//               setPageNumber(1);
-//             }}
+//           <input type="number" className="border rounded-lg p-2 w-full" placeholder="Max"
+//             value={maxPrice} onChange={(e) => { setMaxPrice(e.target.value); setPageNumber(1); }}
 //           />
 //         </div>
 
 //         <div className="flex gap-2">
-//           <select
-//             className="border rounded-lg p-2 w-full"
-//             value={sortBy}
-//             onChange={(e) => {
-//               setSortBy(e.target.value);
-//               setPageNumber(1);
-//             }}
+//           <select className="border rounded-lg p-2 w-full" value={sortBy}
+//             onChange={(e) => { setSortBy(e.target.value); setPageNumber(1); }}
 //           >
-//             <option value="createdAtUtc">Newest</option>
+//             <option value="createdAt">Newest</option>
 //             <option value="price">Price</option>
 //             <option value="name">Name</option>
 //           </select>
 
-//           <select
-//             className="border rounded-lg p-2 w-full"
-//             value={sortOrder}
-//             onChange={(e) => {
-//               setSortOrder(e.target.value);
-//               setPageNumber(1);
-//             }}
+//           <select className="border rounded-lg p-2 w-full" value={sortOrder}
+//             onChange={(e) => { setSortOrder(e.target.value); setPageNumber(1); }}
 //           >
 //             <option value="asc">Asc</option>
 //             <option value="desc">Desc</option>
@@ -216,12 +174,7 @@
 
 //         <div className="lg:col-span-4 flex justify-between text-sm text-gray-500">
 //           <p>{pageInfo}</p>
-//           <button
-//             onClick={resetFilters}
-//             className="border px-3 py-1 rounded-lg"
-//           >
-//             Reset
-//           </button>
+//           <button onClick={resetFilters} className="border px-3 py-1 rounded-lg">Reset</button>
 //         </div>
 //       </div>
 
@@ -229,61 +182,33 @@
 //       {loading ? (
 //         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
 //           {Array.from({ length: pageSize }).map((_, i) => (
-//             <div
-//               key={i}
-//               className="bg-white h-80 rounded-2xl shadow animate-pulse"
-//             />
+//             <div key={i} className="bg-white h-80 rounded-2xl shadow animate-pulse" />
 //           ))}
 //         </div>
 //       ) : (
 //         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
 //           {items.map((p) => {
 //             const hasDiscount = p.discountPrice > 0;
-//             const finalPrice = hasDiscount
-//               ? p.price - p.discountPrice
-//               : p.price;
+//             const finalPrice = hasDiscount ? p.price - p.discountPrice : p.price;
 
 //             return (
-//               <div
-//                 key={p.id}
-//                 className="bg-white rounded-2xl shadow p-4"
-//               >
+//               <div key={p.id} className="bg-white rounded-2xl shadow p-4">
 //                 <Link to={`/products/${p.id}`}>
-//                   <img
-//                     src={
-//                       p.images?.[0]?.imageUrl ||
-//                       "https://via.placeholder.com/400"
-//                     }
-//                     className="h-44 w-full object-cover rounded-lg"
-//                     alt={p.name}
+//                   <img src={p.images?.[0]?.imageUrl || "https://via.placeholder.com/400"}
+//                     className="h-44 w-full object-cover rounded-lg" alt={p.name}
 //                   />
 //                 </Link>
 
-//                 <h2 className="font-semibold mt-2 line-clamp-1">
-//                   {p.name}
-//                 </h2>
-
-//                 <p className="text-sm text-gray-500">
-//                   {p.categoryName}
-//                 </p>
+//                 <h2 className="font-semibold mt-2 line-clamp-1">{p.name}</h2>
+//                 <p className="text-sm text-gray-500">{p.categoryName}</p>
 
 //                 <div className="mt-2 flex justify-between items-center">
 //                   <div>
-//                     <p className="font-bold text-green-600">
-//                       Rs {finalPrice.toFixed(2)}
-//                     </p>
-
-//                     {hasDiscount && (
-//                       <p className="text-xs line-through text-gray-400">
-//                         Rs {p.price}
-//                       </p>
-//                     )}
+//                     <p className="font-bold text-green-600">Rs {finalPrice.toFixed(2)}</p>
+//                     {hasDiscount && <p className="text-xs line-through text-gray-400">Rs {p.price}</p>}
 //                   </div>
 
-//                   <button
-//                     onClick={() => addToCart(p.id)}
-//                     className="bg-black text-white px-3 py-1 rounded-lg"
-//                   >
+//                   <button onClick={() => addToCart(p.id)} className="bg-black text-white px-3 py-1 rounded-lg">
 //                     Add
 //                   </button>
 //                 </div>
@@ -293,38 +218,22 @@
 //         </div>
 //       )}
 
-//       {/* PAGINATION (1,2,3,4...) */}
+//       {/* PAGINATION */}
 //       <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-//         {/* Prev */}
-//         <button
-//           disabled={pageNumber === 1}
-//           onClick={() => setPageNumber((p) => p - 1)}
-//           className="px-3 py-1 border rounded-lg disabled:opacity-40"
-//         >
+//         <button disabled={pageNumber === 1} onClick={() => setPageNumber((p) => p - 1)}
+//           className="px-3 py-1 border rounded-lg disabled:opacity-40">
 //           Prev
 //         </button>
 
-//         {/* Pages */}
 //         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-//           <button
-//             key={page}
-//             onClick={() => setPageNumber(page)}
-//             className={`px-3 py-1 border rounded-lg ${
-//               pageNumber === page
-//                 ? "bg-black text-white"
-//                 : "hover:bg-gray-100"
-//             }`}
-//           >
+//           <button key={page} onClick={() => setPageNumber(page)}
+//             className={`px-3 py-1 border rounded-lg ${pageNumber === page ? "bg-black text-white" : ""}`}>
 //             {page}
 //           </button>
 //         ))}
 
-//         {/* Next */}
-//         <button
-//           disabled={pageNumber === totalPages}
-//           onClick={() => setPageNumber((p) => p + 1)}
-//           className="px-3 py-1 border rounded-lg disabled:opacity-40"
-//         >
+//         <button disabled={pageNumber === totalPages} onClick={() => setPageNumber((p) => p + 1)}
+//           className="px-3 py-1 border rounded-lg disabled:opacity-40">
 //           Next
 //         </button>
 //       </div>
@@ -340,10 +249,9 @@ import toast from "react-hot-toast";
 
 import { addToCartApi } from "../../api/cartApi";
 import { getCategoriesApi } from "../../api/categoryApi";
-import { searchProductsApi } from "../../api/productApi";
+import { getProductsApi } from "../../api/productApi";
 import { useCart } from "../../context/CartContext";
 import useProductRealtime from "../../hooks/userProductRealtime";
-// import useProductRealtime from "../../hooks/useProductRealtime";
 
 export default function ProductsPage() {
   const { refreshCartCount } = useCart();
@@ -351,23 +259,19 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
 
-  // pagination
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(8);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // filters
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [sortBy, setSortBy] = useState("createdAtUtc");
+  const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
 
   const [categories, setCategories] = useState([]);
-
-  // debounce search
   const [searchDraft, setSearchDraft] = useState("");
 
   useEffect(() => {
@@ -375,49 +279,40 @@ export default function ProductsPage() {
       setSearch(searchDraft.trim());
       setPageNumber(1);
     }, 400);
-
     return () => clearTimeout(t);
   }, [searchDraft]);
 
-  // load categories
   useEffect(() => {
     (async () => {
       try {
-        const res = await getCategoriesApi();
-        setCategories(res.data?.data || []);
+        const res = await getCategoriesApi({
+          pageNumber: 1,
+          pageSize: 100,
+          sortBy: "name",
+          sortOrder: "asc"
+        });
+        setCategories(res.data?.data?.items || []);
       } catch {
         toast.error("Failed to load categories");
       }
     })();
   }, []);
 
-  // build query
-  const buildQuery = () => {
-    const q = new URLSearchParams();
-
-    if (search) q.append("search", search);
-    if (categoryId) q.append("categoryId", categoryId);
-    if (minPrice !== "") q.append("minPrice", minPrice);
-    if (maxPrice !== "") q.append("maxPrice", maxPrice);
-
-    q.append("sortBy", sortBy);
-    q.append("sortOrder", sortOrder);
-    q.append("pageNumber", pageNumber);
-    q.append("pageSize", pageSize);
-
-    return q.toString();
-  };
-
-  // load products
   const loadProducts = async () => {
     setLoading(true);
-
     try {
-      const qs = buildQuery();
-      const res = await searchProductsApi(qs);
+      const res = await getProductsApi({
+        search,
+        categoryId,
+        minPrice: minPrice !== "" ? minPrice : undefined,
+        maxPrice: maxPrice !== "" ? maxPrice : undefined,
+        sortBy,
+        sortOrder,
+        pageNumber,
+        pageSize,
+      });
 
       const payload = res.data?.data;
-
       if (payload && Array.isArray(payload.items)) {
         setItems(payload.items);
         setTotalPages(payload.totalPages || 1);
@@ -438,7 +333,6 @@ export default function ProductsPage() {
     loadProducts();
   }, [search, categoryId, minPrice, maxPrice, sortBy, sortOrder, pageNumber, pageSize]);
 
-  // add to cart
   const addToCart = async (productId) => {
     try {
       await addToCartApi({ productId, quantity: 1 });
@@ -449,13 +343,10 @@ export default function ProductsPage() {
     }
   };
 
-  // page info
   const pageInfo = useMemo(() => {
     if (!totalCount) return "No products found";
-
     const start = (pageNumber - 1) * pageSize + 1;
     const end = Math.min(pageNumber * pageSize, totalCount);
-
     return `Showing ${start}-${end} of ${totalCount}`;
   }, [pageNumber, pageSize, totalCount]);
 
@@ -465,32 +356,17 @@ export default function ProductsPage() {
     setCategoryId("");
     setMinPrice("");
     setMaxPrice("");
-    setSortBy("createdAtUtc");
+    setSortBy("createdAt");
     setSortOrder("desc");
     setPageNumber(1);
   };
-
-  // =========================
-  // 🔥 SIGNALR REALTIME LOGIC
-  // =========================
 
   const handleRealtimeProduct = useCallback(
     (product, isNew = false) => {
       setItems((prev) => {
         const exists = prev.some((p) => p.id === product.id);
-
-        // only insert live updates on first page
-        if (isNew && pageNumber === 1) {
-          return [product, ...prev];
-        }
-
-        // update existing product
-        if (exists) {
-          return prev.map((p) =>
-            p.id === product.id ? product : p
-          );
-        }
-
+        if (isNew && pageNumber === 1) return [product, ...prev];
+        if (exists) return prev.map((p) => (p.id === product.id ? product : p));
         return prev;
       });
     },
@@ -498,10 +374,6 @@ export default function ProductsPage() {
   );
 
   useProductRealtime(handleRealtimeProduct);
-
-  // =========================
-  // UI
-  // =========================
 
   return (
     <div className="p-6 space-y-5 bg-gray-50 min-h-screen">
@@ -526,9 +398,7 @@ export default function ProductsPage() {
         >
           <option value="">All categories</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+            <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
 
@@ -564,7 +434,7 @@ export default function ProductsPage() {
               setPageNumber(1);
             }}
           >
-            <option value="createdAtUtc">Newest</option>
+            <option value="createdAt">Newest</option>
             <option value="price">Price</option>
             <option value="name">Name</option>
           </select>
@@ -584,10 +454,7 @@ export default function ProductsPage() {
 
         <div className="lg:col-span-4 flex justify-between text-sm text-gray-500">
           <p>{pageInfo}</p>
-          <button
-            onClick={resetFilters}
-            className="border px-3 py-1 rounded-lg"
-          >
+          <button onClick={resetFilters} className="border px-3 py-1 rounded-lg">
             Reset
           </button>
         </div>
@@ -597,52 +464,34 @@ export default function ProductsPage() {
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: pageSize }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white h-80 rounded-2xl shadow animate-pulse"
-            />
+            <div key={i} className="bg-white h-80 rounded-2xl shadow animate-pulse" />
           ))}
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {items.map((p) => {
             const hasDiscount = p.discountPrice > 0;
-            const finalPrice = hasDiscount
-              ? p.price - p.discountPrice
-              : p.price;
-  
+            const finalPrice = hasDiscount ? p.price - p.discountPrice : p.price;
 
             return (
               <div key={p.id} className="bg-white rounded-2xl shadow p-4">
                 <Link to={`/products/${p.id}`}>
                   <img
-                    src={
-                      p.images?.[0]?.imageUrl ||
-                      "https://via.placeholder.com/400"
-                    }
+                    src={p.images?.[0]?.imageUrl || "https://via.placeholder.com/400"}
                     className="h-44 w-full object-cover rounded-lg"
                     alt={p.name}
                   />
                 </Link>
 
-                <h2 className="font-semibold mt-2 line-clamp-1">
-                  {p.name}
-                </h2>
-
-                <p className="text-sm text-gray-500">
-                  {p.categoryName}
-                </p>
+                <h2 className="font-semibold mt-2 line-clamp-1">{p.name}</h2>
+                <p className="text-sm text-gray-500">{p.categoryName}</p>
+                <p className="text-xs text-gray-500">Stock: {p.quantityInStock}</p>
 
                 <div className="mt-2 flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-green-600">
-                      Rs {finalPrice.toFixed(2)}
-                    </p>
-
+                    <p className="font-bold text-green-600">Rs {finalPrice.toFixed(2)}</p>
                     {hasDiscount && (
-                      <p className="text-xs line-through text-gray-400">
-                        Rs {p.price}
-                      </p>
+                      <p className="text-xs line-through text-gray-400">Rs {p.price}</p>
                     )}
                   </div>
 

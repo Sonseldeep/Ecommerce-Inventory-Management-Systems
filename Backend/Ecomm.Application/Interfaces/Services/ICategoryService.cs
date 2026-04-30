@@ -1,9 +1,11 @@
-﻿using Ecomm.Application.DTOs.Category;
+﻿using Ecomm.Application.Common;
+using Ecomm.Application.DTOs.Category;
 
 namespace Ecomm.Application.Interfaces.Services;
 
 public interface ICategoryService
 {
+    Task<PagedResult<CategoryResponseDto>> SearchAsync(CategoryQueryParamsDto query, CancellationToken ct = default);
     Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default);
     Task<IEnumerable<CategoryResponseDto>> GetAllAsync(CancellationToken ct = default);
     

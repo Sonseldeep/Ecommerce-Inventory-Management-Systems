@@ -24,14 +24,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
     }
 
-    public async Task<IEnumerable<Product>> GetAllWithDetailsAsync(CancellationToken ct = default)
-    {
-        return await _db.Products
-            .Include(x => x.Category)
-            .Include(x => x.Images.Where(i => !i.IsDeleted))
-            .Where(x => !x.IsDeleted)
-            .ToListAsync(ct);
-    }
+    // public async Task<IEnumerable<Product>> GetAllWithDetailsAsync(CancellationToken ct = default)
+    // {
+    //     return await _db.Products
+    //         .Include(x => x.Category)
+    //         .Include(x => x.Images.Where(i => !i.IsDeleted))
+    //         .Where(x => !x.IsDeleted)
+    //         .ToListAsync(ct);
+    // }
 
     public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
         ProductQueryParamsDto query,

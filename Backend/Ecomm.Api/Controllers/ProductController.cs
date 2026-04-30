@@ -17,16 +17,17 @@ public class ProductsController : ControllerBase
         _service = service;
     }
 
-    [HttpGet] 
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] ProductQueryParamsDto query, CancellationToken ct)
     {
-        var data = await _service.GetAllAsync(ct);
+        var data = await _service.SearchAsync(query, ct);
 
-        return Ok(ApiResponse<IEnumerable<ProductResponseDto>>.Ok(
+        return Ok(ApiResponse<PagedProductResponseDto>.Ok(
             data,
             "Products fetched successfully"
         ));
     }
+
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
@@ -39,18 +40,6 @@ public class ProductsController : ControllerBase
         ));
     }
 
-    [HttpGet("search")]
-    public async Task<IActionResult> Search(
-        [FromQuery] ProductQueryParamsDto query,
-        CancellationToken ct)
-    {
-        var data = await _service.SearchAsync(query, ct);
-
-        return Ok(ApiResponse<PagedProductResponseDto>.Ok(
-            data,
-            "Products search completed successfully"
-        ));
-    }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]

@@ -19,10 +19,10 @@ public class AdminOrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] OrderQueryParamsDto query, CancellationToken ct)
     {
-        var data = await _service.GetAllOrdersAsync(ct);
-        return Ok(ApiResponse<IEnumerable<OrderResponseDto>>.Ok(data));
+        var data = await _service.GetAllOrdersAsync(query, ct);
+        return Ok(ApiResponse<PagedResult<OrderResponseDto>>.Ok(data));
     }
 
     [HttpPut("{orderId:guid}/status")]

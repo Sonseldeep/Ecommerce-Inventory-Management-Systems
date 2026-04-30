@@ -2,7 +2,6 @@
 using Ecomm.Application.DTOs.Category;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
-using Ecomm.Application.Mappings;
 using Ecomm.Domain.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +31,28 @@ public class CategoryService : ICategoryService
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
-    
+
+    public async Task<PagedResult<CategoryResponseDto>> SearchAsync(CategoryQueryParamsDto query, CancellationToken ct = default)
+    {
+        query.PageNumber = query.PageNumber <= 0 ? 1 : query.PageNumber;
+        query.PageSize = query.PageSize <= 0 ? 10 : Math.Min(query.PageSize, 100);
+
+        var (items, total) = await _categories.SearchAsync(query, ct);
+
+        return new PagedResult<CategoryResponseDto>
+        {
+            Items = items.Select(x => new CategoryResponseDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Description = x.Description
+            }),
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize,
+            TotalCount = total
+        };
+    }
+
     public async Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default)
     {
         await _createValidator.ValidateAndThrowAsync(request, ct);
@@ -130,8 +150,9 @@ public class CategoryService : ICategoryService
         }
 
         // prevent deleting category that still has active products
-        var products = await _products.GetAllWithDetailsAsync(ct);
-        var inUse = products.Any(p => !p.IsDeleted && p.CategoryId == id);
+     
+        var inUse = await _products.Query()
+            .AnyAsync(p => !p.IsDeleted && p.CategoryId == id, ct);
         if (inUse)
         {
             throw new BadRequestException("Cannot delete category because products are assigned to it.");

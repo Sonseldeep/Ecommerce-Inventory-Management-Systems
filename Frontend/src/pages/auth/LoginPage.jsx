@@ -21,7 +21,12 @@ export default function LoginPage() {
       if ((user.role || "").toLowerCase() === "admin") navigate("/admin/dashboard");
       else navigate("/dashboard");
     } catch (e) {
-      const msg = e?.response?.data?.message || "Login failed";
+      const msg =
+  e?.response?.data?.detail ||
+  e?.response?.data?.message ||
+  "Login failed";
+
+toast.error(msg);
       toast.error(msg);
 
       // helpful redirects
