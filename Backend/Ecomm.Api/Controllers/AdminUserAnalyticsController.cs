@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecomm.Api.Controllers;
 
-
 [ApiController]
 [Route("api/admin/user-analytics")]
 [Authorize(Roles = "Admin")]
@@ -20,16 +19,29 @@ public class AdminUserAnalyticsController : ControllerBase
     }
 
     [HttpGet("summary")]
-    public async Task<IActionResult> Summary([FromQuery] int days = 30, CancellationToken ct = default)
+    public async Task<IActionResult> Summary(
+        [FromQuery] int days = 30,
+        CancellationToken ct = default)
     {
         var data = await _service.GetSummaryAsync(days, ct);
-        return Ok(ApiResponse<UserAnalyticsSummaryDto>.Ok(data));
+
+        return Ok(ApiResponse<UserAnalyticsSummaryDto>.Ok(
+            data,
+            "Analytics summary fetched successfully"
+        ));
     }
 
     [HttpGet("{userId:guid}/products")]
-    public async Task<IActionResult> Products(Guid userId, [FromQuery] int days = 30, CancellationToken ct = default)
+    public async Task<IActionResult> Products(
+        [FromRoute] Guid userId,
+        [FromQuery] int days = 30,
+        CancellationToken ct = default)
     {
         var data = await _service.GetUserPurchasesAsync(userId, days, ct);
-        return Ok(ApiResponse<List<UserProductPurchaseDto>>.Ok(data));
+
+        return Ok(ApiResponse<List<UserProductPurchaseDto>>.Ok(
+            data,
+            "User purchase history fetched successfully"
+        ));
     }
 }

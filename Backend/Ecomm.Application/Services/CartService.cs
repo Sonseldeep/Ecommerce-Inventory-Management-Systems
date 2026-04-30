@@ -58,10 +58,16 @@ public class CartService : ICartService
 
         var product = await _products.GetByIdAsync(request.ProductId, ct);
         if (product is null || !product.IsActive)
+        {
             throw new NotFoundException("Product not found.");
+        }
+            
 
         if (product.QuantityInStock < request.Quantity)
+        {
             throw new BadRequestException("Insufficient stock.");
+        }
+            
 
         var cart = await GetOrCreateCart(userId, ct);
 
@@ -109,11 +115,17 @@ public class CartService : ICartService
                    ?? throw new NotFoundException("Cart item not found.");
 
         if (request.Quantity <= 0)
+        {
             throw new BadRequestException("Quantity must be greater than zero.");
+        }
+            
 
         var product = await _products.GetByIdAsync(item.ProductId, ct) ?? throw new NotFoundException("Product not found.");
         if (product.QuantityInStock < request.Quantity)
+        {
             throw new BadRequestException("Insufficient stock.");
+        }
+           
 
         item.Quantity = request.Quantity;
         item.UnitPrice = ResolveSellingPrice(product.Price, product.DiscountPrice);
@@ -157,7 +169,10 @@ public class CartService : ICartService
     private static decimal ResolveSellingPrice(decimal price, decimal? discountPrice)
     {
         if (discountPrice.HasValue && discountPrice.Value > 0 && discountPrice.Value < price)
+        {
             return discountPrice.Value;
+        }
+           
 
         return price;
     }

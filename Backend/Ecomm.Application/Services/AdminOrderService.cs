@@ -37,12 +37,18 @@ public class AdminOrderService : IAdminOrderService
 
         // basic transition guard
         if (order.OrderStatus == OrderStatus.Cancelled || order.OrderStatus == OrderStatus.Delivered)
+        {
             throw new BadRequestException("Finalized orders cannot be changed.");
+        }
+            
 
         order.OrderStatus = newStatus;
 
         if (newStatus == OrderStatus.Paid)
+        {
             order.PaymentStatus = PaymentStatus.Paid;
+        }
+            
 
         _orders.Update(order);
         await _uow.SaveChangesAsync(ct);

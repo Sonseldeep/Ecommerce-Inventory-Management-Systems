@@ -284,7 +284,10 @@ public class AuthService : IAuthService
 
         if (user.PasswordResetLastSentAtUtc.HasValue &&
             DateTime.UtcNow < user.PasswordResetLastSentAtUtc.Value.AddSeconds(ResetCooldownSeconds))
+        {
             throw new BadRequestException("Please wait before requesting another reset email.");
+        }
+         
 
         
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
@@ -314,16 +317,28 @@ public class AuthService : IAuthService
         var user = await _users.GetByEmailAsync(email, ct);
 
         if (user is null || !user.IsActive)
+        {
             throw new BadRequestException("Invalid reset request.");
+        }
+
 
         if (string.IsNullOrWhiteSpace(user.PasswordResetTokenHash) || !user.PasswordResetTokenExpiresAtUtc.HasValue)
+        {
             throw new BadRequestException("Reset token not requested.");
+        }
+
 
         if (DateTime.UtcNow > user.PasswordResetTokenExpiresAtUtc.Value)
+        {
             throw new BadRequestException("Reset token expired.");
+        }
+
 
         if (user.PasswordResetAttempts >= ResetMaxAttempts)
+        {
             throw new BadRequestException("Too many attempts. Please request a new reset token.");
+        }
+           
 
         var tokenHash = Hash(request.Token.Trim());
         if (tokenHash != user.PasswordResetTokenHash)
@@ -352,11 +367,17 @@ public class AuthService : IAuthService
         
         var user = await _users.GetByIdAsync(userId, ct);
         if (user is null || !user.IsActive)
+        {
             throw new NotFoundException("User not found.");
+        }
+
 
         if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
             throw new BadRequestException("Current password is incorrect.");
 
+        }
+            
         // 1. Update Password
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
     

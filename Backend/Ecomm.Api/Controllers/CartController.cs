@@ -18,31 +18,56 @@ public class CartController : ControllerBase
         _service = service;
     }
 
+    
     [HttpGet]
     public async Task<IActionResult> GetMyCart(CancellationToken ct)
     {
         var data = await _service.GetMyCartAsync(ct);
-        return Ok(ApiResponse<CartResponseDto>.Ok(data));
+
+        return Ok(ApiResponse<CartResponseDto>.Ok(
+            data,
+            "Cart fetched successfully"
+        ));
     }
 
+    
     [HttpPost("items")]
-    public async Task<IActionResult> AddItem([FromBody] AddToCartRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> AddItem(
+        [FromBody] AddToCartRequestDto request,
+        CancellationToken ct)
     {
         var data = await _service.AddItemAsync(request, ct);
-        return Ok(ApiResponse<CartResponseDto>.Ok(data, "Item added to cart"));
+
+        return Ok(ApiResponse<CartResponseDto>.Ok(
+            data,
+            "Item added to cart"
+        ));
     }
 
     [HttpPut("items/{cartItemId:guid}")]
-    public async Task<IActionResult> UpdateItem(Guid cartItemId, [FromBody] UpdateCartItemRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> UpdateItem(
+        [FromRoute] Guid cartItemId,
+        [FromBody] UpdateCartItemRequestDto request,
+        CancellationToken ct)
     {
         var data = await _service.UpdateItemAsync(cartItemId, request, ct);
-        return Ok(ApiResponse<CartResponseDto>.Ok(data, "Cart item updated"));
+
+        return Ok(ApiResponse<CartResponseDto>.Ok(
+            data,
+            "Cart item updated successfully"
+        ));
     }
 
     [HttpDelete("items/{cartItemId:guid}")]
-    public async Task<IActionResult> RemoveItem(Guid cartItemId, CancellationToken ct)
+    public async Task<IActionResult> RemoveItem(
+        [FromRoute] Guid cartItemId,
+        CancellationToken ct)
     {
         var data = await _service.RemoveItemAsync(cartItemId, ct);
-        return Ok(ApiResponse<CartResponseDto>.Ok(data, "Cart item removed"));
+
+        return Ok(ApiResponse<CartResponseDto>.Ok(
+            data,
+            "Cart item removed successfully"
+        ));
     }
 }

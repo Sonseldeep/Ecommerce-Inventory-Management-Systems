@@ -12,20 +12,26 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public ProductRepository(AppDbContext db) : base(db) { }
 
     public Task<bool> ExistsBySkuAsync(string sku, CancellationToken ct = default)
-        => _db.Products.AnyAsync(x => x.SKU == sku && !x.IsDeleted, ct);
+    {
+        return _db.Products.AnyAsync(x => x.SKU == sku && !x.IsDeleted, ct);
+    }
 
     public Task<Product?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default)
-        => _db.Products
+    {
+        return _db.Products
             .Include(x => x.Category)
             .Include(x => x.Images.Where(i => !i.IsDeleted))
             .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+    }
 
     public async Task<IEnumerable<Product>> GetAllWithDetailsAsync(CancellationToken ct = default)
-        => await _db.Products
+    {
+        return await _db.Products
             .Include(x => x.Category)
             .Include(x => x.Images.Where(i => !i.IsDeleted))
             .Where(x => !x.IsDeleted)
             .ToListAsync(ct);
+    }
 
     public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(
         ProductQueryParamsDto query,

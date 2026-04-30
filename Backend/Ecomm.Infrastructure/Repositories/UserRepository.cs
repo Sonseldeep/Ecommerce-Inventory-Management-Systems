@@ -10,5 +10,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public UserRepository(AppDbContext db) : base(db) { }
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
-        => _db.Users.FirstOrDefaultAsync(x => x.Email == email && !x.IsDeleted, ct);
+    {
+        return _db.Users.FirstOrDefaultAsync(x => x.Email == email && !x.IsDeleted, ct);
+    }
 }

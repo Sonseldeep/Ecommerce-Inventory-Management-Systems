@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecomm.Api.Controllers;
 
-
 [ApiController]
 [Route("api/categories")]
 public class CategoriesController : ControllerBase
@@ -19,34 +18,56 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var data = await _service.GetAllAsync(ct);
-        return Ok(ApiResponse<IEnumerable<CategoryResponseDto>>.Ok(data));
+
+        return Ok(ApiResponse<IEnumerable<CategoryResponseDto>>.Ok(
+            data,
+            "Categories fetched successfully"
+        ));
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Create([FromBody] CreateCategoryRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> Create(
+        [FromBody] CreateCategoryRequestDto request,
+        CancellationToken ct)
     {
         var data = await _service.CreateAsync(request, ct);
-        return Ok(ApiResponse<CategoryResponseDto>.Ok(data, "Category created"));
+
+        return Ok(ApiResponse<CategoryResponseDto>.Ok(
+            data,
+            "Category created successfully"
+        ));
     }
-    
+
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> Update(
+        [FromRoute] Guid id,
+        [FromBody] UpdateCategoryRequestDto request,
+        CancellationToken ct)
     {
         var data = await _service.UpdateAsync(id, request, ct);
-        return Ok(ApiResponse<CategoryResponseDto>.Ok(data, "Category updated"));
+
+        return Ok(ApiResponse<CategoryResponseDto>.Ok(
+            data,
+            "Category updated successfully"
+        ));
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Delete(
+        [FromRoute] Guid id,
+        CancellationToken ct)
     {
         await _service.DeleteAsync(id, ct);
-        return Ok(ApiResponse<string>.Ok("Deleted", "Category deleted"));
+
+        return Ok(ApiResponse<string>.Ok(
+            "Deleted",
+            "Category deleted successfully"
+        ));
     }
 }

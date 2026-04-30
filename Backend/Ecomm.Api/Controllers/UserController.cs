@@ -23,7 +23,12 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Me(CancellationToken ct)
     {
         var userId = User.GetUserId();
+
         var profile = await _users.GetMeAsync(userId, ct);
-        return Ok(ApiResponse<UserProfileDto>.Ok(profile));
+
+        return Ok(ApiResponse<UserProfileDto>.Ok(
+            profile,
+            "User profile fetched successfully"
+        ));
     }
 }

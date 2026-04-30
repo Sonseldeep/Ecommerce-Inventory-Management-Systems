@@ -8,3 +8,7 @@ Backend/Ecomm.Api/appsettings.json
 appsettings.json
 appsettings.Development.json
 
+# Logs
+Backend/Ecomm.Api/Logs/
+*.log
+*.txt

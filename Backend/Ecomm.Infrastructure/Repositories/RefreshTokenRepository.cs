@@ -10,10 +10,15 @@ public class RefreshTokenRepository : Repository<RefreshToken>, IRefreshTokenRep
 {
     public RefreshTokenRepository(AppDbContext db) : base(db) { }
 
-    public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken ct = default)
-        => _db.RefreshTokens
+    public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken ct = default)
+    {
+        return await _db.RefreshTokens
             .Include(x => x.User)
-            .FirstOrDefaultAsync(x => x.Token == token && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(
+                x => x.Token == token && !x.IsDeleted,
+                ct
+            );
+    }
 
     public async Task RevokeAllForUserAsync(Guid userId, CancellationToken ct = default)
     {

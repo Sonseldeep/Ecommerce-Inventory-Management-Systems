@@ -3,7 +3,6 @@ using Ecomm.Application.DTOs.Product;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Mappings;
-using Ecomm.Application.Validators.Product;
 using Ecomm.Domain.Entities;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -47,10 +46,16 @@ public class ProductService : IProductService
 
         var category = await _categories.GetByIdAsync(request.CategoryId, ct);
         if (category is null)
+        {
             throw new NotFoundException("Category not found.");
+        }
+
 
         if (await _products.ExistsBySkuAsync(request.SKU.Trim(), ct))
+        {
             throw new BadRequestException("SKU already exists.");
+        }
+           
 
         var product = request.ToEntity();
         await _products.AddAsync(product, ct);
@@ -120,11 +125,17 @@ public class ProductService : IProductService
         await _updateValidator.ValidateAndThrowAsync(request, ct);
         
         var product = await _products.GetByIdWithDetailsAsync(id, ct);
-        if (product is null) throw new NotFoundException("Product not found.");
+        if (product is null)
+        {
+            throw new NotFoundException("Product not found.");
+        }
 
         var category = await _categories.GetByIdAsync(request.CategoryId, ct);
-        if (category is null) throw new NotFoundException("Category not found.");
+        if (category is null)
+        {
+            throw new NotFoundException("Category not found.");
 
+        }
         product.Name = request.Name.Trim();
         product.Description = request.Description.Trim();
         product.Price = request.Price;
@@ -153,7 +164,10 @@ public class ProductService : IProductService
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var product = await _products.GetByIdWithDetailsAsync(id, ct);
-        if (product is null) throw new NotFoundException("Product not found.");
+        if (product is null)
+        {
+            throw new NotFoundException("Product not found.");
+        }
 
         // soft delete product
         _products.Remove(product);
@@ -170,73 +184,3 @@ public class ProductService : IProductService
 }
 
 
-
-
-// public class ProductService : IProductService
-// {
-//     private readonly IProductRepository _products;
-//     private readonly ICategoryRepository _categories;
-//     private readonly IUnitOfWork _uow;
-//     private readonly ILogger<ProductService> _logger;
-//
-//     public ProductService(
-//         IProductRepository products,
-//         ICategoryRepository categories,
-//         IUnitOfWork uow,
-//         ILogger<ProductService> logger)
-//     {
-//         _products = products;
-//         _categories = categories;
-//         _uow = uow;
-//         _logger = logger;
-//     }
-//
-//     public async Task<ProductResponseDto> CreateAsync(CreateProductRequestDto request, CancellationToken ct = default)
-//     {
-//         var category = await _categories.GetByIdAsync(request.CategoryId, ct);
-//         if (category is null)
-//             throw new NotFoundException("Category not found.");
-//
-//         if (await _products.ExistsBySkuAsync(request.SKU.Trim(), ct))
-//             throw new BadRequestException("SKU already exists.");
-//
-//         var product = request.ToEntity();
-//         await _products.AddAsync(product, ct);
-//         await _uow.SaveChangesAsync(ct);
-//
-//         var created = await _products.GetByIdWithDetailsAsync(product.Id, ct)
-//                       ?? throw new NotFoundException("Created product not found.");
-//
-//         _logger.LogInformation("Product created: {Sku}", created.SKU);
-//         return created.ToDto();
-//     }
-//
-//     public async Task<IEnumerable<ProductResponseDto>> GetAllAsync(CancellationToken ct = default)
-//     {
-//         var list = await _products.GetAllWithDetailsAsync(ct);
-//         return list.Select(x => x.ToDto());
-//     }
-//
-//     public async Task<ProductResponseDto> GetByIdAsync(Guid id, CancellationToken ct = default)
-//     {
-//         var p = await _products.GetByIdWithDetailsAsync(id, ct);
-//         if (p is null) throw new NotFoundException("Product not found.");
-//         return p.ToDto();
-//     }
-//     
-//     public async Task<PagedProductResponseDto> SearchAsync(ProductQueryParamsDto query, CancellationToken ct = default)
-//     {
-//         query.PageNumber = query.PageNumber <= 0 ? 1 : query.PageNumber;
-//         query.PageSize = query.PageSize <= 0 ? 10 : Math.Min(query.PageSize, 100);
-//
-//         var (items, total) = await _products.SearchAsync(query, ct);
-//
-//         return new PagedProductResponseDto
-//         {
-//             Items = items.Select(x => x.ToDto()),
-//             PageNumber = query.PageNumber,
-//             PageSize = query.PageSize,
-//             TotalCount = total
-//         };
-//     }
-// }

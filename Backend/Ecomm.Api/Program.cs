@@ -8,17 +8,14 @@ using Ecomm.Application.Interfaces.Services;
 using Ecomm.Infrastructure;
 using Ecomm.Infrastructure.Persistence;
 using Ecomm.Infrastructure.Service;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers();
-builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddProblemDetails(options =>
 {
@@ -34,42 +31,19 @@ builder.Host.UseSerilog((ctx, lc) =>
 
 // Validation Exception Handler always before Global Exception Handler
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
-
-// Global Exception Handler
 builder.Services.AddExceptionHandler<GlobalExceptionMiddleware>();
-builder.Services.AddEndpointsApiExplorer();
 
+
+// SignalR
 builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddSignalR();
 
 
+// Registers IHttpContextAccessor to allow services to access the current HTTP request context
+// (e.g., user claims, headers, trace ID) outside of controllers in a safe way.
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 
-// Swagger + JWT
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "PosSystem API",
-        Version = "v1"
-    });
-
-    // 🔐 Define Bearer Auth
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter: Bearer {your JWT token}"
-    });
-});
-
-builder.Services.AddHttpContextAccessor();
-// test otp
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
-
-// Custom layers
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -110,7 +84,7 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
                     var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
                     var user = await db.Users.FindAsync(Guid.Parse(userId));
 
-                    if (user == null)
+                    if (user is null)
                     {
                         ctx.Fail("User not found.");
                         return;
@@ -140,6 +114,7 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
     });
 
     builder.Services.AddAuthorization();
+    builder.Services.AddOpenApi();
 
     var app = builder.Build();
 
@@ -152,8 +127,8 @@ builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"
 
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
+        app.MapOpenApi();
+        app.MapScalarApiReference();
     }
 
     app.UseHttpsRedirection();

@@ -39,7 +39,11 @@ public class CategoryService : ICategoryService
         var name = request.Name.Trim();
 
         var exists = await _categories.ExistsByNameAsync(name, ct);
-        if (exists) throw new BadRequestException("Category already exists.");
+        
+        if (exists)
+        {
+            throw new BadRequestException("Category already exists.");
+        };
 
         var entity = new Category
         {
@@ -86,13 +90,19 @@ public class CategoryService : ICategoryService
         await _updateValidator.ValidateAndThrowAsync(request, ct);
         
         var category = await _categories.GetByIdAsync(id, ct);
-        if (category is null) throw new NotFoundException("Category not found.");
+        if (category is null)
+        {
+            throw new NotFoundException("Category not found.");
+        }
 
         var name = request.Name.Trim();
         if (!string.Equals(category.Name, name, StringComparison.OrdinalIgnoreCase))
         {
             var nameExists = await _categories.ExistsByNameAsync(name, ct);
-            if (nameExists) throw new BadRequestException("Category name already exists.");
+            if (nameExists)
+            {
+                throw new BadRequestException("Category name already exists.");
+            }
         }
 
         category.Name = name;
@@ -114,12 +124,18 @@ public class CategoryService : ICategoryService
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var category = await _categories.GetByIdAsync(id, ct);
-        if (category is null) throw new NotFoundException("Category not found.");
+        if (category is null)
+        {
+            throw new NotFoundException("Category not found.");
+        }
 
         // prevent deleting category that still has active products
         var products = await _products.GetAllWithDetailsAsync(ct);
         var inUse = products.Any(p => !p.IsDeleted && p.CategoryId == id);
-        if (inUse) throw new BadRequestException("Cannot delete category because products are assigned to it.");
+        if (inUse)
+        {
+            throw new BadRequestException("Cannot delete category because products are assigned to it.");
+        }
 
         _categories.Remove(category);
         await _uow.SaveChangesAsync(ct);
