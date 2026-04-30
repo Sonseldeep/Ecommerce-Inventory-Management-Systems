@@ -3,7 +3,9 @@ using Ecomm.Application.DTOs.Product;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Mappings;
+using Ecomm.Application.Validators.Product;
 using Ecomm.Domain.Entities;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 
 namespace Ecomm.Application.Services;
@@ -16,6 +18,8 @@ public class ProductService : IProductService
     private readonly IUnitOfWork _uow;
     private readonly ILogger<ProductService> _logger;
     private readonly IRealtimeNotifier _realtime;
+    private readonly IValidator<CreateProductRequestDto> _createValidator;
+    private readonly IValidator<UpdateProductRequestDto> _updateValidator;
 
     public ProductService(
         IProductRepository products,
@@ -23,7 +27,9 @@ public class ProductService : IProductService
         IRepository<ProductImage> productImages,
         IUnitOfWork uow,
         ILogger<ProductService> logger,
-        IRealtimeNotifier realtime)
+        IRealtimeNotifier realtime,
+        IValidator<CreateProductRequestDto> createValidator,
+        IValidator<UpdateProductRequestDto> updateValidator)
     {
         _products = products;
         _categories = categories;
@@ -31,10 +37,14 @@ public class ProductService : IProductService
         _uow = uow;
         _logger = logger;
         _realtime = realtime;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
 
     public async Task<ProductResponseDto> CreateAsync(CreateProductRequestDto request, CancellationToken ct = default)
     {
+        await _createValidator.ValidateAndThrowAsync(request, ct);
+
         var category = await _categories.GetByIdAsync(request.CategoryId, ct);
         if (category is null)
             throw new NotFoundException("Category not found.");
@@ -107,6 +117,8 @@ public class ProductService : IProductService
     
     public async Task<ProductResponseDto> UpdateAsync(Guid id, UpdateProductRequestDto request, CancellationToken ct = default)
     {
+        await _updateValidator.ValidateAndThrowAsync(request, ct);
+        
         var product = await _products.GetByIdWithDetailsAsync(id, ct);
         if (product is null) throw new NotFoundException("Product not found.");
 
