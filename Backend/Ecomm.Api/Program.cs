@@ -114,54 +114,6 @@ builder.Services
         };
     });
 
-    // builder.Services
-    //     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    //     .AddJwtBearer(options =>
-    //     {
-    //         options.RequireHttpsMetadata = false;
-    //         options.SaveToken = true;
-    //         options.TokenValidationParameters = new TokenValidationParameters
-    //         {
-    //             ValidateIssuer = true,
-    //             ValidIssuer = jwt.Issuer,
-    //             ValidateAudience = true,
-    //             ValidAudience = jwt.Audience,
-    //             ValidateIssuerSigningKey = true,
-    //             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SecretKey)),
-    //             ValidateLifetime = true,
-    //             ClockSkew = TimeSpan.Zero
-    //         };
-    //         options.Events = new JwtBearerEvents
-    //         {
-    //             OnTokenValidated = async ctx =>
-    //             {
-    //                 var userId = ctx.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    //                 var pwdChangedClaim = ctx.Principal?.FindFirst("pwd_changed")?.Value;
-    //
-    //                 if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(pwdChangedClaim))
-    //                 {
-    //                     ctx.Fail("Invalid token.");
-    //                     return;
-    //                 }
-    //
-    //                 var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-    //                 var user = await db.Users.FindAsync(Guid.Parse(userId));
-    //
-    //                 if (user is null)
-    //                 {
-    //                     ctx.Fail("User not found.");
-    //                     return;
-    //                 }
-    //
-    //                 var tokenChangedAt = DateTime.Parse(pwdChangedClaim);
-    //                 if (user.PasswordChangedAtUtc > tokenChangedAt)
-    //                 {
-    //                     ctx.Fail("Token expired due to password change.");
-    //                 }
-    //             }
-    //         };
-    //         
-    //     });
 
     var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
