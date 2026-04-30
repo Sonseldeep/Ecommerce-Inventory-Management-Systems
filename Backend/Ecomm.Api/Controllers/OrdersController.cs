@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecomm.Api.Controllers;
 
-
 [ApiController]
 [Route("api/orders")]
 [Authorize]
@@ -20,16 +19,26 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost("checkout")]
-    public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> Checkout(
+        [FromBody] CheckoutRequestDto request,
+        CancellationToken ct)
     {
         var data = await _service.CheckoutAsync(request, ct);
-        return Ok(ApiResponse<OrderResponseDto>.Ok(data, "Order placed successfully"));
+
+        return Ok(ApiResponse<OrderResponseDto>.Ok(
+            data,
+            "Order placed successfully"
+        ));
     }
 
     [HttpGet("my-orders")]
     public async Task<IActionResult> MyOrders(CancellationToken ct)
     {
         var data = await _service.GetMyOrdersAsync(ct);
-        return Ok(ApiResponse<IEnumerable<OrderResponseDto>>.Ok(data));
+
+        return Ok(ApiResponse<IEnumerable<OrderResponseDto>>.Ok(
+            data,
+            "Orders fetched successfully"
+        ));
     }
 }

@@ -22,8 +22,10 @@ public class CurrentUserService : ICurrentUserService
                     ?? user?.FindFirst("sub")?.Value;
 
         if (!Guid.TryParse(value, out var userId))
+        {
             throw new UnauthorizedException("Invalid user token.");
-
+        }
+        
         return userId;
     }
 

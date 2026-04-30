@@ -35,12 +35,26 @@ public class ProductImageService : IProductImageService
 
     public async Task<ProductImageDto> UploadProductImageAsync(Guid productId, IFormFile file, bool isPrimary, CancellationToken ct = default)
     {
-        if (file is null || file.Length == 0) throw new BadRequestException("Image file is required.");
-        if (file.Length > MaxFileSize) throw new BadRequestException("Image size cannot exceed 5MB.");
-        if (!AllowedTypes.Contains(file.ContentType.ToLower())) throw new BadRequestException("Only jpg, png, webp are allowed.");
+        if (file is null || file.Length == 0)
+        {
+            throw new BadRequestException("Image file is required.");
+        }
+
+        if (file.Length > MaxFileSize)
+        {
+            throw new BadRequestException("Image size cannot exceed 5MB.");
+        }
+
+        if (!AllowedTypes.Contains(file.ContentType.ToLower()))
+        {
+            throw new BadRequestException("Only jpg, png, webp are allowed.");
+        }
 
         var product = await _products.GetByIdWithDetailsAsync(productId, ct);
-        if (product is null) throw new NotFoundException("Product not found.");
+        if (product is null)
+        {
+            throw new NotFoundException("Product not found.");
+        }
 
         await using var stream = file.OpenReadStream();
         var imageUrl = await _fileStorage.UploadImageAsync(stream, file.FileName, file.ContentType, ct);
@@ -58,7 +72,7 @@ public class ProductImageService : IProductImageService
         {
             ProductId = productId,
             ImageUrl = imageUrl,
-            IsPrimary = isPrimary || !product.Images.Any(x => !x.IsDeleted),
+            IsPrimary = isPrimary || product.Images.All(x => x.IsDeleted),
             SortOrder = product.Images.Count(x => !x.IsDeleted)
         };
 
@@ -79,7 +93,10 @@ public class ProductImageService : IProductImageService
     public async Task<IEnumerable<ProductImageDto>> GetProductImagesAsync(Guid productId, CancellationToken ct = default)
     {
         var product = await _products.GetByIdWithDetailsAsync(productId, ct);
-        if (product is null) throw new NotFoundException("Product not found.");
+        if (product is null)
+        {
+            throw new NotFoundException("Product not found.");
+        }
 
         return product.Images
             .Where(x => !x.IsDeleted)
@@ -96,10 +113,16 @@ public class ProductImageService : IProductImageService
     public async Task DeleteProductImageAsync(Guid productId, Guid imageId, CancellationToken ct = default)
     {
         var product = await _products.GetByIdWithDetailsAsync(productId, ct);
-        if (product is null) throw new NotFoundException("Product not found.");
+        if (product is null)
+        {
+            throw new NotFoundException("Product not found.");
+        }
 
         var image = product.Images.FirstOrDefault(x => x.Id == imageId && !x.IsDeleted);
-        if (image is null) throw new NotFoundException("Image not found.");
+        if (image is null)
+        {
+            throw new NotFoundException("Image not found.");
+        }
 
         _images.Remove(image);
 

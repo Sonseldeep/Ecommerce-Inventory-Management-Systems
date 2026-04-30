@@ -26,7 +26,7 @@ public class AdminOrdersController : ControllerBase
     }
 
     [HttpPut("{orderId:guid}/status")]
-    public async Task<IActionResult> UpdateStatus(Guid orderId, [FromBody] UpdateOrderStatusRequestDto request, CancellationToken ct)
+    public async Task<IActionResult> UpdateStatus([FromRoute] Guid orderId, [FromBody] UpdateOrderStatusRequestDto request, CancellationToken ct)
     {
         var data = await _service.UpdateStatusAsync(orderId, request.Status, ct);
         return Ok(ApiResponse<OrderResponseDto>.Ok(data, "Order status updated"));

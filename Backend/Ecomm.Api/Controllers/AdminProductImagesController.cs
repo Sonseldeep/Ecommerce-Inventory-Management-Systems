@@ -20,7 +20,7 @@ public class AdminProductImagesController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetImages(Guid productId, CancellationToken ct)
+    public async Task<IActionResult> GetImages([FromRoute] Guid productId, CancellationToken ct)
     {
         var data = await _service.GetProductImagesAsync(productId, ct);
         return Ok(ApiResponse<IEnumerable<ProductImageDto>>.Ok(data));
@@ -28,18 +28,14 @@ public class AdminProductImagesController : ControllerBase
 
     [HttpPost]
     [RequestSizeLimit(5 * 1024 * 1024)]
-    public async Task<IActionResult> Upload(
-        Guid productId,
-        IFormFile file,
-        [FromQuery] bool isPrimary = false,
-        CancellationToken ct = default)
+    public async Task<IActionResult> Upload([FromRoute] Guid productId, [FromForm] IFormFile file, [FromQuery] bool isPrimary = false, CancellationToken ct = default)
     {
         var data = await _service.UploadProductImageAsync(productId, file, isPrimary, ct);
-        return Ok(ApiResponse<ProductImageDto>.Ok(data, "Image uploaded"));
+        return Ok(ApiResponse<ProductImageDto>.Ok(data, "Image uploaded successfully"));
     }
 
     [HttpDelete("{imageId:guid}")]
-    public async Task<IActionResult> Delete(Guid productId, Guid imageId, CancellationToken ct)
+    public async Task<IActionResult> Delete([FromRoute] Guid productId, [FromRoute] Guid imageId, CancellationToken ct)
     {
         await _service.DeleteProductImageAsync(productId, imageId, ct);
         return Ok(ApiResponse<string>.Ok("Deleted", "Image deleted"));

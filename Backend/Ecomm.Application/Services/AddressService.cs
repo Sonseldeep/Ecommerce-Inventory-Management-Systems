@@ -74,7 +74,10 @@ public class AddressService : IAddressService
         var target = await _addresses.GetByIdAsync(addressId, ct);
 
         if (target is null || target.UserId != userId)
+        {
             throw new NotFoundException("Address not found.");
+        }
+            
 
         var all = await _addresses.GetByUserIdAsync(userId, ct);
         foreach (var addr in all)
@@ -93,7 +96,10 @@ public class AddressService : IAddressService
         var address = await _addresses.GetByIdAsync(addressId, ct);
 
         if (address is null || address.UserId != userId)
+        {
             throw new NotFoundException("Address not found.");
+        }
+           
 
         _addresses.Remove(address);
         await _uow.SaveChangesAsync(ct);

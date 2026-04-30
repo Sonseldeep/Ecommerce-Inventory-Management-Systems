@@ -33,14 +33,14 @@ public class AddressesController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/set-default")]
-    public async Task<IActionResult> SetDefault(Guid id, CancellationToken ct)
+    public async Task<IActionResult> SetDefault([FromRoute] Guid id, CancellationToken ct)
     {
         var data = await _service.SetDefaultAsync(id, ct);
         return Ok(ApiResponse<AddressResponseDto>.Ok(data, "Default address updated"));
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken ct)
     {
         await _service.DeleteAsync(id, ct);
         return Ok(ApiResponse<string>.Ok("Deleted", "Address deleted"));

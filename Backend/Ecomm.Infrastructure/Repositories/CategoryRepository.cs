@@ -17,8 +17,10 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
     }
 
     public async Task<IEnumerable<Category>> GetActiveAsync(CancellationToken ct = default)
-        => await _db.Categories
+    {
+        return await _db.Categories
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Name)
             .ToListAsync(ct);
+    }
 }

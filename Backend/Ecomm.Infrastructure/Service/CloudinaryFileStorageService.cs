@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Ecomm.Application.Common;
 using Ecomm.Application.Interfaces.Services;
 using Microsoft.Extensions.Options;
 
@@ -32,20 +33,30 @@ public class CloudinaryFileStorageService : IFileStorageService
         var result = await _cloudinary.UploadAsync(uploadParams, ct);
 
         if (result.Error is not null)
-            throw new Exception($"Cloudinary upload failed: {result.Error.Message}");
+        {
+            throw new BadRequestException($"Cloudinary upload failed: {result.Error.Message}");
+        }
+            
 
         return result.SecureUrl?.ToString() ?? throw new Exception("Cloudinary returned empty URL.");
     }
 
     public async Task DeleteImageAsync(string publicIdOrUrl, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(publicIdOrUrl) || publicIdOrUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(publicIdOrUrl) ||
+            publicIdOrUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
             return;
+        }
+           
 
         var deletionParams = new DeletionParams(publicIdOrUrl);
         var result = await _cloudinary.DestroyAsync(deletionParams);
 
         if (result.Error is not null)
-            throw new Exception($"Cloudinary delete failed: {result.Error.Message}");
+        {
+            throw new BadRequestException($"Cloudinary delete failed: {result.Error.Message}");
+        }
+            
     }
 }
