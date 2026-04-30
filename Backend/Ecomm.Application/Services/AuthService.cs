@@ -4,6 +4,7 @@ using Ecomm.Application.DTOs.Auth;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Domain.Entities;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 
 namespace Ecomm.Application.Services;
@@ -18,6 +19,13 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IEmailOtpService _emailOtpService;
     private readonly IEmailSender _emailSender;
+    
+    private readonly IValidator<RegisterRequestDto> _registerValidator;
+    private readonly IValidator<LoginRequestDto> _loginValidator;
+    private readonly IValidator<ResetPasswordRequestDto> _resetPasswordValidator;
+    private readonly IValidator<ForgotPasswordRequestDto> _forgotPasswordValidator;
+    private readonly IValidator<ChangePasswordRequestDto> _changePasswordValidator;
+    
 
     private const int RefreshTokenExpiryDays = 7;
     private const int ResetTokenExpiryMinutes = 15;
@@ -32,7 +40,12 @@ public class AuthService : IAuthService
         IUnitOfWork uow,
         IEmailOtpService emailOtpService,
         IEmailSender emailSender,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IValidator<RegisterRequestDto> registerValidator,
+        IValidator<LoginRequestDto> loginValidator,
+        IValidator<ResetPasswordRequestDto> resetPasswordValidator,
+        IValidator<ForgotPasswordRequestDto> forgotPasswordValidator,
+        IValidator<ChangePasswordRequestDto> changePasswordValidator)
     {
         _users = users;
         _refreshTokens = refreshTokens;
@@ -42,10 +55,17 @@ public class AuthService : IAuthService
         _emailOtpService = emailOtpService;
         _emailSender = emailSender;
         _logger = logger;
+        _registerValidator = registerValidator;
+        _loginValidator = loginValidator;
+        _resetPasswordValidator = resetPasswordValidator;
+        _forgotPasswordValidator = forgotPasswordValidator;
+        _changePasswordValidator = changePasswordValidator;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, CancellationToken ct = default)
     {
+        await _registerValidator.ValidateAndThrowAsync(request, ct);
+        
         var email = request.Email.Trim().ToLower();
 
         var existing = await _users.GetByEmailAsync(email, ct);
@@ -103,6 +123,8 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken ct = default)
     {
+        await _loginValidator.ValidateAndThrowAsync(request, ct);
+        
         var email = request.Email.Trim().ToLower();
         var user = await _users.GetByEmailAsync(email, ct);
 
@@ -248,6 +270,8 @@ public class AuthService : IAuthService
 
     public async Task ForgotPasswordAsync(ForgotPasswordRequestDto request, CancellationToken ct = default)
     {
+        await _forgotPasswordValidator.ValidateAndThrowAsync(request, ct);
+        
         var email = request.Email.Trim().ToLower();
         var user = await _users.GetByEmailAsync(email, ct);
 
@@ -283,6 +307,8 @@ public class AuthService : IAuthService
 
     public async Task ResetPasswordAsync(ResetPasswordRequestDto request, CancellationToken ct = default)
     {
+        await _resetPasswordValidator.ValidateAndThrowAsync(request, ct);
+        
         var email = request.Email.Trim().ToLower();
         var user = await _users.GetByEmailAsync(email, ct);
 
@@ -321,6 +347,8 @@ public class AuthService : IAuthService
 
     public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequestDto request, CancellationToken ct = default)
     {
+        await _changePasswordValidator.ValidateAndThrowAsync(request, ct);
+        
         var user = await _users.GetByIdAsync(userId, ct);
         if (user is null || !user.IsActive)
             throw new Exception("User not found.");
