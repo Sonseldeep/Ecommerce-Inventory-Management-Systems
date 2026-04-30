@@ -4,6 +4,7 @@ using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Mappings;
 using Ecomm.Domain.Entities;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -15,21 +16,26 @@ public class CategoryService : ICategoryService
     private readonly IProductRepository _products;
     private readonly IUnitOfWork _uow;
     private readonly ILogger<CategoryService> _logger;
+    private readonly IValidator<CreateCategoryRequestDto> _createValidator;
+    private readonly IValidator<UpdateCategoryRequestDto> _updateValidator;
 
     public CategoryService(
         ICategoryRepository categories,
         IProductRepository products,
         IUnitOfWork uow,
-        ILogger<CategoryService> logger)
+        ILogger<CategoryService> logger, IValidator<CreateCategoryRequestDto> createValidator, IValidator<UpdateCategoryRequestDto> updateValidator)
     {
         _categories = categories;
         _products = products;
         _uow = uow;
         _logger = logger;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
     }
     
     public async Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default)
     {
+        await _createValidator.ValidateAndThrowAsync(request, ct);
         var name = request.Name.Trim();
 
         var exists = await _categories.ExistsByNameAsync(name, ct);
@@ -61,27 +67,7 @@ public class CategoryService : ICategoryService
         };
     }
 
-    // public async Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default)
-    // {
-    //     var exists = await _categories.ExistsByNameAsync(request.Name.Trim(), ct);
-    //     if (exists) throw new BadRequestException("Category already exists.");
-    //
-    //     var entity = new Category
-    //     {
-    //         Name = request.Name.Trim(),
-    //         Description = request.Description?.Trim()
-    //     };
-    //
-    //     await _categories.AddAsync(entity, ct);
-    //     await _uow.SaveChangesAsync(ct);
-    //
-    //     return new CategoryResponseDto
-    //     {
-    //         Id = entity.Id,
-    //         Name = entity.Name,
-    //         Description = entity.Description
-    //     };
-    // }
+
     
     public async Task<IEnumerable<CategoryResponseDto>> GetAllAsync(CancellationToken ct = default)
     {
@@ -94,21 +80,11 @@ public class CategoryService : ICategoryService
         });
     }
 
-    // public async Task<IEnumerable<CategoryResponseDto>> GetAllAsync(CancellationToken ct = default)
-    // {
-    //     var list = await _categories.GetAllAsync(ct);
-    //     return list
-    //         .Where(x => !x.IsDeleted)
-    //         .Select(x => new CategoryResponseDto
-    //         {
-    //             Id = x.Id,
-    //             Name = x.Name,
-    //             Description = x.Description
-    //         });
-    // }
-
+    
     public async Task<CategoryResponseDto> UpdateAsync(Guid id, UpdateCategoryRequestDto request, CancellationToken ct = default)
     {
+        await _updateValidator.ValidateAndThrowAsync(request, ct);
+        
         var category = await _categories.GetByIdAsync(id, ct);
         if (category is null) throw new NotFoundException("Category not found.");
 
@@ -152,37 +128,4 @@ public class CategoryService : ICategoryService
     }
 }
 
-// public class CategoryService : ICategoryService
-// {
-//     private readonly ICategoryRepository _categories;
-//     private readonly IUnitOfWork _uow;
-//     private readonly ILogger<CategoryService> _logger;
-//
-//     public CategoryService(ICategoryRepository categories, IUnitOfWork uow, ILogger<CategoryService> logger)
-//     {
-//         _categories = categories;
-//         _uow = uow;
-//         _logger = logger;
-//     }
-//
-//     public async Task<CategoryResponseDto> CreateAsync(CreateCategoryRequestDto request, CancellationToken ct = default)
-//     {
-//         if (await _categories.ExistsByNameAsync(request.Name.Trim(), ct))
-//             throw new BadRequestException("Category already exists.");
-//
-//         var entity = request.ToEntity();
-//         await _categories.AddAsync(entity, ct);
-//         await _uow.SaveChangesAsync(ct);
-//
-//         _logger.LogInformation("Category created: {Name}", entity.Name);
-//         return entity.ToDto();
-//     }
-//
-//     public async Task<IEnumerable<CategoryResponseDto>> GetAllAsync(CancellationToken ct = default)
-//     {
-//         var list = await _categories.GetAllAsync(ct);
-//         return list.Select(x => x.ToDto());
-//     }
-//     
-//     
-// }
+
