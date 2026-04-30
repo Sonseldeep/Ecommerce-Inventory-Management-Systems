@@ -1,25 +1,3 @@
-// import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-
-// const API_BASE = "https://localhost:7278";
-
-// export const createNotificationsHub = (token) =>
-//   new HubConnectionBuilder()
-//     .withUrl(`${API_BASE}/hubs/notifications`, {
-//       accessTokenFactory: () => token || "",
-//     })
-//     .withAutomaticReconnect()
-//     .configureLogging(LogLevel.Information)
-//     .build();
-
-// export const createProductsHub = (token) =>
-//   new HubConnectionBuilder()
-//     .withUrl(`${API_BASE}/hubs/products`, {
-//       accessTokenFactory: () => token || "",
-//     })
-//     .withAutomaticReconnect()
-//     .configureLogging(LogLevel.Information)
-//     .build();
-
 
 
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
