@@ -1,4 +1,5 @@
 ﻿using Ecomm.Application.Common;
+using Ecomm.Application.DTOs.Notifications;
 using Ecomm.Application.DTOs.Order;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
@@ -172,7 +173,17 @@ public class OrderService : IOrderService
         var created = await _orders.GetByIdWithItemsAsync(order.Id, ct)
             ?? throw new NotFoundException("Order not found after creation.");
 
-        await _realtime.OrderPlacedAsync(created.ToDto(), ct);
+        // await _realtime.OrderPlacedAsync(created.ToDto(), ct);
+        await _realtime.OrderPlacedAsync(new OrderCreatedNotificationDto
+        {
+            OrderId = created.Id,
+            OrderNumber = created.OrderNumber,
+            UserName = created.User?.FullName ?? "Unknown",
+            Email = created.User?.Email ?? "Unknown",
+            TotalAmount = created.TotalAmount,
+            CreatedAtUtc = created.CreatedAtUtc
+        }, ct);
+     
 
         _logger.LogInformation(
             "Order created. OrderNumber: {OrderNumber}, UserId: {UserId}",
