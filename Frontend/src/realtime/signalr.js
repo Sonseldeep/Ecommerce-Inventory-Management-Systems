@@ -24,10 +24,20 @@ export const createProductsHub = () => {
 // (Requires JWT authentication)
 // ============================
 //
-export const createNotificationsHub = (token) => {
+// export const createNotificationsHub = (token) => {
+//   return new HubConnectionBuilder()
+//     .withUrl(`${API_BASE}/hubs/notifications`, {
+//       accessTokenFactory: () => token, // secure user-specific data
+//     })
+//     .withAutomaticReconnect()
+//     .configureLogging(LogLevel.Information)
+//     .build();
+// };
+
+export const createNotificationsHub = () => {
   return new HubConnectionBuilder()
     .withUrl(`${API_BASE}/hubs/notifications`, {
-      accessTokenFactory: () => token, // secure user-specific data
+      accessTokenFactory: () => localStorage.getItem("accessToken"),
     })
     .withAutomaticReconnect()
     .configureLogging(LogLevel.Information)
@@ -39,10 +49,19 @@ export const createNotificationsHub = (token) => {
 // 3. OPTIONAL: ADMIN HUB (if needed)
 // ============================
 //
-export const createAdminHub = (token) => {
+// export const createAdminHub = (token) => {
+//   return new HubConnectionBuilder()
+//     .withUrl(`${API_BASE}/hubs/admin`, {
+//       accessTokenFactory: () => token,
+//     })
+//     .withAutomaticReconnect()
+//     .configureLogging(LogLevel.Information)
+//     .build();
+// };
+export const createAdminHub = () => {
   return new HubConnectionBuilder()
     .withUrl(`${API_BASE}/hubs/admin`, {
-      accessTokenFactory: () => token,
+      accessTokenFactory: () => localStorage.getItem("accessToken"),
     })
     .withAutomaticReconnect()
     .configureLogging(LogLevel.Information)

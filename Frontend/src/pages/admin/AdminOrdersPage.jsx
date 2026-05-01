@@ -107,7 +107,7 @@ export default function AdminOrdersPage() {
       <div className="bg-white p-4 rounded-xl shadow grid md:grid-cols-2 lg:grid-cols-3 gap-3">
         <input
           className="border rounded p-2"
-          placeholder="Search order / customer name / email"
+          placeholder="Search order by id"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPageNumber(1); }}
         />
