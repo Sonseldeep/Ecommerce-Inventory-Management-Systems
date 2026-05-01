@@ -33,4 +33,6 @@ public class Order : BaseEntity
     public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+    
+
 }

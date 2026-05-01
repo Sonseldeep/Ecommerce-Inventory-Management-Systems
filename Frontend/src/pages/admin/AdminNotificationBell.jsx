@@ -48,7 +48,7 @@ export default function AdminNotificationBell() {
       const entry = {
         id: crypto.randomUUID(),
         type: "order",
-        text: `New order ${payload.orderNumber} — ₹${payload.total}`,
+        text: `New order ${payload.orderNumber} — Rs.${payload.totalAmount}`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setItems((prev) => [entry, ...prev]);

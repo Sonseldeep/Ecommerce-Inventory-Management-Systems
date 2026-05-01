@@ -1,4 +1,5 @@
 ﻿using Ecomm.Api.Hubs;
+using Ecomm.Application.DTOs.Notifications;
 using Ecomm.Application.DTOs.Order;
 using Ecomm.Application.DTOs.Product;
 using Ecomm.Application.Interfaces.Services;
@@ -16,15 +17,11 @@ public class SignalRRealtimeNotifier : IRealtimeNotifier
         _notifications = notifications;
         _products = products;
     }
+    
 
-    public async Task OrderPlacedAsync(OrderResponseDto order, CancellationToken ct = default)
+    public async Task OrderPlacedAsync(OrderCreatedNotificationDto order, CancellationToken ct = default)
     {
-        await _notifications.Clients.All.SendAsync("OrderPlaced", new
-        {
-            orderId = order.Id,
-            orderNumber = order.OrderNumber,
-            total = order.TotalAmount
-        }, ct);
+        await _notifications.Clients.Group("Admins").SendAsync("OrderPlaced", order, ct);
     }
 
     public async Task ProductUpdatedAsync(ProductResponseDto product, CancellationToken ct = default)
