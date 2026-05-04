@@ -58,7 +58,7 @@ public class OrderService : IOrderService
         var userId = _currentUser.GetUserId();
 
         var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);
-        if (cart is null || !cart.Items.Any(x => !x.IsDeleted))
+        if (cart is null || cart.Items.All(x => x.IsDeleted))
         {
             throw new BadRequestException("Cart is empty.");
 
@@ -72,7 +72,7 @@ public class OrderService : IOrderService
 
         var activeItems = cart.Items.Where(x => !x.IsDeleted).ToList();
 
-        decimal subtotal = 0m;
+        var subtotal = 0m;
         var pricingSnapshot = new List<(Guid ProductId, string Name, string Sku, int Qty, decimal UnitPrice)>();
 
         foreach (var item in activeItems)
@@ -96,8 +96,8 @@ public class OrderService : IOrderService
             subtotal += finalUnitPrice * item.Quantity;
         }
 
-        var discount = 0m;
-        var shipping = 0m;
+        const decimal discount = 0m;
+        const decimal shipping = 0m;
         var total = subtotal - discount + shipping;
 
         var order = new Order

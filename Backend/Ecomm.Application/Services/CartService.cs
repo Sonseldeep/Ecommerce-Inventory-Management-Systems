@@ -168,7 +168,7 @@ public class CartService : ICartService
 
     private static decimal ResolveSellingPrice(decimal price, decimal? discountPrice)
     {
-        if (discountPrice.HasValue && discountPrice.Value > 0 && discountPrice.Value < price)
+        if (discountPrice is > 0 && discountPrice.Value < price)
         {
             return discountPrice.Value;
         }

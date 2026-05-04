@@ -12,9 +12,14 @@ public class Product : BaseEntity
     public decimal? DiscountPrice { get; set; }
 
     public int QuantityInStock { get; set; }
+    
+    // threshold for low stock alerts
+    // If stock ≤ 5 → trigger low stock notification
     public int ReorderLevel { get; set; } = 5;
     public bool IsActive { get; set; } = true;
 
+    
+    // Each product belongs to one category
     public Guid CategoryId { get; set; }
     public Category Category { get; set; } = null!;
 
