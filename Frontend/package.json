@@ -12,6 +12,11 @@
   "dependencies": {
     "@microsoft/signalr": "^10.0.0",
     "axios": "^1.15.2",
+    "devextreme": "^25.2.6",
+    "devextreme-react": "^25.2.6",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "jspdf": "^4.2.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hot-toast": "^2.6.0",

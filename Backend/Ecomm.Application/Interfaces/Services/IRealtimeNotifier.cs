@@ -13,5 +13,8 @@ public interface IRealtimeNotifier
     Task ProductCreatedAsync(ProductResponseDto product, CancellationToken ct = default); 
     
     Task LowStockAsync(Guid productId, string productName, int remaining, int reorderLevel, CancellationToken ct = default);
+    
+    Task ProductStockUpdatedAsync(Guid productId, string productName, int newStockLevel, CancellationToken ct);
+
 }
 

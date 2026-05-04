@@ -10,5 +10,5 @@ public class CreateProductRequestDto
     public int QuantityInStock { get; set; }
     public int ReorderLevel { get; set; } = 5;
     public Guid CategoryId { get; set; }
-    public List<string>? ImageUrls { get; set; } = new();
+    public List<string>? ImageUrls { get; set; } = [];
 }

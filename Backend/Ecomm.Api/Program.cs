@@ -69,7 +69,7 @@ builder.Services
             ClockSkew = TimeSpan.Zero
         };
 
-        // ✅ allow SignalR to read token from query string
+        //  allow SignalR to read token from query string
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = ctx =>

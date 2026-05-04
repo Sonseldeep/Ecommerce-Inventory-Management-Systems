@@ -3,7 +3,7 @@
 
 import axiosClient from "./axiosClient";
 
-// ✅ paged + filters
+// paged + filters
 export const getAllOrdersApi = (params = {}) =>
   axiosClient.get("/admin/orders", { params });
 

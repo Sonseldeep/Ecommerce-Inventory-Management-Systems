@@ -7,6 +7,5 @@ public interface IProductRepository : IRepository<Product>
 {
     Task<bool> ExistsBySkuAsync(string sku, CancellationToken ct = default);
     Task<Product?> GetByIdWithDetailsAsync(Guid id, CancellationToken ct = default);
-    // Task<IEnumerable<Product>> GetAllWithDetailsAsync(CancellationToken ct = default);
     Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(ProductQueryParamsDto query, CancellationToken ct = default);
 }
