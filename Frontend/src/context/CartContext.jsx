@@ -1,6 +1,3 @@
-
-
-
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getMyCartApi } from "../api/cartApi";
 import { useAuth } from "./AuthContext";

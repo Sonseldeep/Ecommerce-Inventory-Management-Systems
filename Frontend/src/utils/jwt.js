@@ -1,6 +1,3 @@
-
-
-
 export function parseJwt(token) {
   try {
     const base64 = token.split(".")[1];

@@ -38,7 +38,7 @@ export default function App() {
           <Toaster position="top-right" />
 
           <Routes>
-            {/* 🔓 Public Routes */}
+            {/*  Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -46,10 +46,10 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* 🔐 Protected Layout */}
+            {/*  Protected Layout */}
             <Route element={<MainLayout />}>
 
-              {/* 👤 Customer + Admin */}
+              {/*  Customer + Admin */}
               <Route element={<ProtectedRoute roles={["Customer", "Admin"]} />}>
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/products/:id" element={<ProductDetailsPage />} />
@@ -61,7 +61,7 @@ export default function App() {
                 <Route path="/change-password" element={<ChangePasswordPage />} />
               </Route>
 
-              {/* 👑 Admin only */}
+              {/*  Admin only */}
               <Route element={<ProtectedRoute roles={["Admin"]} />}>
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/categories" element={<AdminCategoriesPage />} />
@@ -70,7 +70,7 @@ export default function App() {
               </Route>
             </Route>
 
-            {/* 🔁 Redirects */}
+            {/*  Redirects */}
             <Route path="/" element={<Navigate to="/products" replace />} />
             <Route path="*" element={<Navigate to="/products" replace />} />
           </Routes>
