@@ -135,6 +135,15 @@ public class OrderService : IOrderService
             //Deduct stock 
             product.QuantityInStock -= line.Qty;
             _products.Update(product);
+            
+           // Broadcast the stock change to all connected admin clients via SignalR
+            await _realtime.ProductStockUpdatedAsync(
+                product.Id,
+                product.Name,
+                product.QuantityInStock,
+                ct
+            );
+            
 
             // Low stock alert after deduction 
             var reorderLevel = product.ReorderLevel > 0 ? product.ReorderLevel : 5;
