@@ -18,7 +18,7 @@ import CartPage from "./pages/user/CartPage";
 import CheckoutPage from "./pages/user/CheckoutPage";
 import OrdersPage from "./pages/user/OrdersPage";
 import AddressesPage from "./pages/user/AddressesPage";
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+// import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
@@ -27,6 +27,7 @@ import ForgotPasswordPage from "./pages/auth/ForgetPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ChangePasswordPage from "./pages/user/ChnagePasswordPage";
 import UserProfilePage from "./pages/user/UserProfilePage";
+import AdminDashboardPage from "./pages/AdminDashboard/AdminDashboardPage";
 
 export default function App() {
   return (
@@ -63,7 +64,8 @@ export default function App() {
 
               {/*  Admin only */}
               <Route element={<ProtectedRoute roles={["Admin"]} />}>
-                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                {/* <Route path="/admin/dashboard" element={<AdminDashboardPage />} /> */}
+                  <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/categories" element={<AdminCategoriesPage />} />
                 <Route path="/admin/products" element={<AdminProductsPage />} />
                 <Route path="/admin/orders" element={<AdminOrdersPage />} />

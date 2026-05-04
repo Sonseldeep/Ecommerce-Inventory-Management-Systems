@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/set-state-in-effect */
 
 
 import { useEffect, useMemo, useState, useCallback } from "react";
@@ -298,3 +300,8 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+
+
+
+
