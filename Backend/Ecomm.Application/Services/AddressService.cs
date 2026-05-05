@@ -3,6 +3,7 @@ using Ecomm.Application.DTOs.Address;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Domain.Entities;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 
 namespace Ecomm.Application.Services;
@@ -13,21 +14,25 @@ public class AddressService : IAddressService
     private readonly ICurrentUserService _currentUser;
     private readonly IUnitOfWork _uow;
     private readonly ILogger<AddressService> _logger;
+    private readonly IValidator<CreateAddressRequestDto> _validator;
 
     public AddressService(
         IAddressRepository addresses,
         ICurrentUserService currentUser,
         IUnitOfWork uow,
-        ILogger<AddressService> logger)
+        ILogger<AddressService> logger, IValidator<CreateAddressRequestDto> validator)
     {
         _addresses = addresses;
         _currentUser = currentUser;
         _uow = uow;
         _logger = logger;
+        _validator = validator;
     }
 
     public async Task<AddressResponseDto> CreateAsync(CreateAddressRequestDto request, CancellationToken ct = default)
     {
+        await _validator.ValidateAndThrowAsync(request,ct);
+        
         var userId = _currentUser.GetUserId();
 
         if (request.IsDefault)
