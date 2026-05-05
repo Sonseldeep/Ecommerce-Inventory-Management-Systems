@@ -1,7 +1,3 @@
-
-
-
-
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
@@ -18,10 +14,9 @@ import CartPage from "./pages/user/CartPage";
 import CheckoutPage from "./pages/user/CheckoutPage";
 import OrdersPage from "./pages/user/OrdersPage";
 import AddressesPage from "./pages/user/AddressesPage";
-// import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage";
-import AdminProductsPage from "./pages/admin/AdminProductsPage";
-import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
+import AdminCategoriesPage from "./pages/admin/categories";
+import AdminProductsPage from "./pages/admin/products";
+import AdminOrdersPage from "./pages/admin/orders";
 import VerifyEmailOtpPage from "./pages/auth/VerifyEmailOtpPage";
 import ForgotPasswordPage from "./pages/auth/ForgetPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
@@ -33,7 +28,7 @@ export default function App() {
   return (
 
     <BrowserRouter>
-      {/* ✅ AuthProvider is now INSIDE BrowserRouter so useNavigate works */}
+      {/*  AuthProvider is now INSIDE BrowserRouter so useNavigate works */}
       <AuthProvider>
         <CartProvider>
           <Toaster position="top-right" />
