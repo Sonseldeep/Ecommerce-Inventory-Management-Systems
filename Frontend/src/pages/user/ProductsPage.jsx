@@ -1,6 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
-
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
@@ -48,7 +48,7 @@ export default function ProductsPage() {
           pageNumber: 1,
           pageSize: 100,
           sortBy: "name",
-          sortOrder: "asc"
+          sortOrder: "asc",
         });
         setCategories(res.data?.data?.items || []);
       } catch {
@@ -88,9 +88,18 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+ 
     loadProducts();
-  }, [search, categoryId, minPrice, maxPrice, sortBy, sortOrder, pageNumber, pageSize]);
+  }, [
+    search,
+    categoryId,
+    minPrice,
+    maxPrice,
+    sortBy,
+    sortOrder,
+    pageNumber,
+    pageSize,
+  ]);
 
   const addToCart = async (productId) => {
     try {
@@ -129,7 +138,7 @@ export default function ProductsPage() {
         return prev;
       });
     },
-    [pageNumber]
+    [pageNumber],
   );
 
   useProductRealtime(handleRealtimeProduct);
@@ -157,7 +166,9 @@ export default function ProductsPage() {
         >
           <option value="">All categories</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
 
@@ -213,7 +224,10 @@ export default function ProductsPage() {
 
         <div className="lg:col-span-4 flex justify-between text-sm text-gray-500">
           <p>{pageInfo}</p>
-          <button onClick={resetFilters} className="border px-3 py-1 rounded-lg">
+          <button
+            onClick={resetFilters}
+            className="border px-3 py-1 rounded-lg"
+          >
             Reset
           </button>
         </div>
@@ -223,20 +237,28 @@ export default function ProductsPage() {
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: pageSize }).map((_, i) => (
-            <div key={i} className="bg-white h-80 rounded-2xl shadow animate-pulse" />
+            <div
+              key={i}
+              className="bg-white h-80 rounded-2xl shadow animate-pulse"
+            />
           ))}
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {items.map((p) => {
             const hasDiscount = p.discountPrice > 0;
-            const finalPrice = hasDiscount ? p.price - p.discountPrice : p.price;
+            const finalPrice = hasDiscount
+              ? p.price - p.discountPrice
+              : p.price;
 
             return (
               <div key={p.id} className="bg-white rounded-2xl shadow p-4">
                 <Link to={`/products/${p.id}`}>
                   <img
-                    src={p.images?.[0]?.imageUrl || "https://via.placeholder.com/400"}
+                    src={
+                      p.images?.[0]?.imageUrl ||
+                      "https://via.placeholder.com/400"
+                    }
                     className="h-44 w-full object-cover rounded-lg"
                     alt={p.name}
                   />
@@ -244,13 +266,19 @@ export default function ProductsPage() {
 
                 <h2 className="font-semibold mt-2 line-clamp-1">{p.name}</h2>
                 <p className="text-sm text-gray-500">{p.categoryName}</p>
-                <p className="text-xs text-gray-500">Stock: {p.quantityInStock}</p>
+                <p className="text-xs text-gray-500">
+                  Stock: {p.quantityInStock}
+                </p>
 
                 <div className="mt-2 flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-green-600">Rs {finalPrice.toFixed(2)}</p>
+                    <p className="font-bold text-green-600">
+                      Rs {finalPrice.toFixed(2)}
+                    </p>
                     {hasDiscount && (
-                      <p className="text-xs line-through text-gray-400">Rs {p.price}</p>
+                      <p className="text-xs line-through text-gray-400">
+                        Rs {p.price}
+                      </p>
                     )}
                   </div>
 
@@ -300,8 +328,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-
-
-
-
