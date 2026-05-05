@@ -4,35 +4,70 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Ecomm.Api.MIddleware;
 
-public sealed class ValidationExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+public sealed class ValidationExceptionHandler(IProblemDetailsService problemDetailsService)
+    : IExceptionHandler
 {
-    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext httpContext,
+        Exception exception,
+        CancellationToken cancellationToken)
     {
-        if (exception is not ValidationException validationException )
-        {
+        if (exception is not ValidationException validationException)
             return false;
-        }
+
+        var errors = validationException.Errors
+            .GroupBy(e => e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray()
+            );
 
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-        var context = new ProblemDetailsContext
+        var problemDetails = new ValidationProblemDetails(errors)
         {
+            Title = "Validation Failed",
+            Status = StatusCodes.Status400BadRequest,
+            Detail = "One or more validation errors occurred."
+        };
 
+        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = new ProblemDetails
-            {
-                Detail = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-            }
-        };
-        var errors = validationException.Errors.GroupBy(e => e.PropertyName)
-            .ToDictionary(
-                g => g.Key.ToLowerInvariant(),
-                g => g.Select(e => e.ErrorMessage).ToArray()
-            );
-        context.ProblemDetails.Extensions.Add("errors", errors);
-        
-        return await problemDetailsService.TryWriteAsync(context);
+            ProblemDetails = problemDetails
+        });
     }
 }
+// public sealed class ValidationExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+// {
+//     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+//     {
+//         if (exception is not ValidationException validationException )
+//         {
+//             return false;
+//         }
+//
+//         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+//
+//         var context = new ProblemDetailsContext
+//         {
+//
+//             HttpContext = httpContext,
+//             Exception = exception,
+//             ProblemDetails = new ProblemDetails
+//             {
+//                 Detail = "One or more validation errors occurred.",
+//                 Status = StatusCodes.Status400BadRequest,
+//             }
+//         };
+//         var errors = validationException.Errors.GroupBy(e => e.PropertyName)
+//             .ToDictionary(
+//                 g => g.Key.ToLowerInvariant(),
+//                 g => g.Select(e => e.ErrorMessage).ToArray()
+//             );
+//         context.ProblemDetails.Extensions.Add("errors", errors);
+//         
+//         return await problemDetailsService.TryWriteAsync(context);
+//     }
+// }
