@@ -132,7 +132,7 @@ builder.Services
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
-
+    app.UseExceptionHandler();
     app.UseSerilogRequestLogging();
 
     app.MapHub<NotificationsHub>("/hubs/notifications");
