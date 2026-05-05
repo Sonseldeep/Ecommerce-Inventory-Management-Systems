@@ -6,22 +6,42 @@ import toast from "react-hot-toast";
 import TextBox from "devextreme-react/text-box";
 import Button from "devextreme-react/button";
 import ValidationGroup from "devextreme-react/validation-group";
-import Validator, { RequiredRule, EmailRule, StringLengthRule } from "devextreme-react/validator";
+import Validator, {
+  RequiredRule,
+  EmailRule,
+  StringLengthRule,
+} from "devextreme-react/validator";
 import validationEngine from "devextreme/ui/validation_engine";
 
 import "./auth.css";
 
 const EyeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const EyeOffIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
     <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
@@ -30,9 +50,9 @@ const EyeOffIcon = () => (
 const GROUP = "registerForm";
 
 export default function RegisterPage() {
-  const [form, setForm]         = useState({ fullName: "", email: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const submit = async (e) => {
@@ -55,7 +75,6 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-
         <div className="form-header">
           <h1 className="form-title-plain">Create Account</h1>
           <p className="form-desc">Fill in the details below to get started.</p>
@@ -63,12 +82,13 @@ export default function RegisterPage() {
 
         <ValidationGroup name={GROUP}>
           <form onSubmit={submit} className="fields">
-
             <div className="field-block">
               <label className="field-label">Full Name</label>
               <TextBox
                 value={form.fullName}
-                onValueChanged={(e) => setForm((s) => ({ ...s, fullName: e.value }))}
+                onValueChanged={(e) =>
+                  setForm((s) => ({ ...s, fullName: e.value }))
+                }
                 placeholder="John Doe"
                 stylingMode="outlined"
                 width="100%"
@@ -83,14 +103,16 @@ export default function RegisterPage() {
               <label className="field-label">Email</label>
               <TextBox
                 value={form.email}
-                onValueChanged={(e) => setForm((s) => ({ ...s, email: e.value }))}
+                onValueChanged={(e) =>
+                  setForm((s) => ({ ...s, email: e.value }))
+                }
                 placeholder="you@example.com"
                 stylingMode="outlined"
                 width="100%"
               >
                 <Validator validationGroup={GROUP}>
                   <RequiredRule message="Email is required" />
-                  <EmailRule   message="Invalid email format" />
+                  <EmailRule message="Invalid email format" />
                 </Validator>
               </TextBox>
             </div>
@@ -100,14 +122,16 @@ export default function RegisterPage() {
               <div className="password-wrap">
                 <TextBox
                   value={form.password}
-                  onValueChanged={(e) => setForm((s) => ({ ...s, password: e.value }))}
+                  onValueChanged={(e) =>
+                    setForm((s) => ({ ...s, password: e.value }))
+                  }
                   placeholder="••••••••"
                   mode={showPass ? "text" : "password"}
                   stylingMode="outlined"
                   width="100%"
                 >
                   <Validator validationGroup={GROUP}>
-                    <RequiredRule     message="Password is required" />
+                    <RequiredRule message="Password is required" />
                     <StringLengthRule min={6} message="At least 6 characters" />
                   </Validator>
                 </TextBox>
@@ -135,22 +159,16 @@ export default function RegisterPage() {
                 validationGroup={GROUP}
               />
             </div>
-
           </form>
         </ValidationGroup>
 
         <p className="auth-center-note" style={{ marginTop: "1.2rem" }}>
-          Already have an account?{" "}
-          <Link to="/login">Login</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
-
       </div>
     </div>
   );
 }
-
-
-
 
 // import { useState } from "react";
 // import { Link, useNavigate } from "react-router-dom";

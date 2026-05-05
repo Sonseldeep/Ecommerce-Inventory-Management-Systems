@@ -6,23 +6,43 @@ import toast from "react-hot-toast";
 import TextBox from "devextreme-react/text-box";
 import Button from "devextreme-react/button";
 import ValidationGroup from "devextreme-react/validation-group";
-import Validator, { RequiredRule, EmailRule, StringLengthRule } from "devextreme-react/validator";
+import Validator, {
+  RequiredRule,
+  EmailRule,
+  StringLengthRule,
+} from "devextreme-react/validator";
 import validationEngine from "devextreme/ui/validation_engine";
 
 import "./auth.css";
 
 // ─── Eye icons ───────────────────────────────────────────────────────────────
 const EyeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
     <circle cx="12" cy="12" r="3" />
   </svg>
 );
 
 const EyeOffIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
     <line x1="1" y1="1" x2="23" y2="23" />
   </svg>
@@ -31,13 +51,13 @@ const EyeOffIcon = () => (
 const GROUP = "loginForm";
 
 export default function LoginPage() {
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [showPass, setShowPass]   = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
   const submit = async (e) => {
     e?.preventDefault?.();
@@ -48,9 +68,16 @@ export default function LoginPage() {
     try {
       const user = await login({ email, password });
       toast.success("Welcome back");
-      navigate((user?.role || "").toLowerCase() === "admin" ? "/admin/dashboard" : "/products");
+      navigate(
+        (user?.role || "").toLowerCase() === "admin"
+          ? "/admin/dashboard"
+          : "/products",
+      );
     } catch (err) {
-      const msg = err?.response?.data?.detail || err?.response?.data?.message || "Login failed";
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Login failed";
       toast.error(msg);
       if (msg.toLowerCase().includes("verify"))
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -61,18 +88,23 @@ export default function LoginPage() {
 
   return (
     <div className="login-root">
-
       {/* ── Left branding panel ── */}
       <div className="login-left">
         <div className="grid-bg" />
         <div className="left-content">
-          <div className="brand-box"><span>A</span></div>
+          <div className="brand-box">
+            <span>A</span>
+          </div>
           <h2 className="left-headline">
-            Your work,<br /><em>beautifully</em><br />managed.
+            Your work,
+            <br />
+            <em>beautifully</em>
+            <br />
+            managed.
           </h2>
           <p className="left-sub">
-            Sign in to access your dashboard, manage products,
-            and stay in sync with your team.
+            Sign in to access your dashboard, manage products, and stay in sync
+            with your team.
           </p>
         </div>
         <div className="left-footer">
@@ -84,7 +116,6 @@ export default function LoginPage() {
       {/* ── Right form panel ── */}
       <div className="login-right">
         <div className="form-inner">
-
           <div className="form-header">
             <p className="form-eyebrow">Welcome back</p>
             <h1 className="form-title">Sign in</h1>
@@ -93,7 +124,6 @@ export default function LoginPage() {
 
           <ValidationGroup name={GROUP}>
             <form onSubmit={submit} className="fields">
-
               <div className="field-block">
                 <label className="field-label">Email address</label>
                 <TextBox
@@ -105,7 +135,7 @@ export default function LoginPage() {
                 >
                   <Validator validationGroup={GROUP}>
                     <RequiredRule message="Email is required" />
-                    <EmailRule   message="Enter a valid email" />
+                    <EmailRule message="Enter a valid email" />
                   </Validator>
                 </TextBox>
               </div>
@@ -122,8 +152,11 @@ export default function LoginPage() {
                     width="100%"
                   >
                     <Validator validationGroup={GROUP}>
-                      <RequiredRule     message="Password is required" />
-                      <StringLengthRule min={6} message="At least 6 characters" />
+                      <RequiredRule message="Password is required" />
+                      <StringLengthRule
+                        min={6}
+                        message="At least 6 characters"
+                      />
                     </Validator>
                   </TextBox>
                   <button
@@ -150,7 +183,6 @@ export default function LoginPage() {
                   validationGroup={GROUP}
                 />
               </div>
-
             </form>
           </ValidationGroup>
 
@@ -166,14 +198,11 @@ export default function LoginPage() {
               Verify email
             </Link>
           </p>
-
         </div>
       </div>
-
     </div>
   );
 }
-
 
 // import { useState } from "react";
 // import { Link, useNavigate } from "react-router-dom";

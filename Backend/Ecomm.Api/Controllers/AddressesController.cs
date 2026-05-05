@@ -32,7 +32,7 @@ public class AddressesController : ControllerBase
         return Ok(ApiResponse<AddressResponseDto>.Ok(data, "Address added"));
     }
 
-    [HttpPatch("{id:guid}/set-default")]
+    [HttpPut("{id:guid}/set-default")]
     public async Task<IActionResult> SetDefault([FromRoute] Guid id, CancellationToken ct)
     {
         var data = await _service.SetDefaultAsync(id, ct);
