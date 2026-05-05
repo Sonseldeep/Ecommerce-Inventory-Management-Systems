@@ -1,3 +1,106 @@
+// import { useState } from "react";
+// import { Link, useNavigate } from "react-router-dom";
+// import { forgotPasswordApi } from "../../api/authApi";
+// import toast from "react-hot-toast";
+
+// import TextBox from "devextreme-react/text-box";
+// import Button from "devextreme-react/button";
+// import ValidationGroup from "devextreme-react/validation-group";
+// import Validator, { RequiredRule, EmailRule } from "devextreme-react/validator";
+// import validationEngine from "devextreme/ui/validation_engine";
+
+// import "./auth.css";
+
+// const GROUP = "forgotForm";
+
+// export default function ForgotPasswordPage() {
+//   const [email, setEmail]   = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const navigate = useNavigate();
+
+//   const submit = async (e) => {
+//     e?.preventDefault?.();
+//     const result = validationEngine.validateGroup(GROUP);
+//     if (!result?.isValid) return;
+
+//     setLoading(true);
+//     try {
+//       await forgotPasswordApi(email);
+//       toast.success("If account exists, reset token sent to email.");
+//       navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+//     } catch (err) {
+//       toast.error(err?.response?.data?.message || "Failed");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="auth-page">
+//       <div className="auth-card">
+
+//         <div className="form-header">
+//           <h1 className="form-title-plain">Forgot Password</h1>
+//           <p className="form-desc">
+//             Enter your email and we'll send a reset token to your mailbox.
+//           </p>
+//         </div>
+
+//         <ValidationGroup name={GROUP}>
+//           <form onSubmit={submit} className="fields">
+
+//             <div className="field-block">
+//               <label className="field-label">Email address</label>
+//               <TextBox
+//                 value={email}
+//                 onValueChanged={(e) => setEmail(e.value)}
+//                 placeholder="you@example.com"
+//                 stylingMode="outlined"
+//                 width="100%"
+//               >
+//                 <Validator validationGroup={GROUP}>
+//                   <RequiredRule message="Email is required" />
+//                   <EmailRule   message="Invalid email format" />
+//                 </Validator>
+//               </TextBox>
+//             </div>
+
+//             <div className="btn-block-plain">
+//               <Button
+//                 text={loading ? "Sending…" : "Send reset token"}
+//                 type="default"
+//                 stylingMode="contained"
+//                 width="100%"
+//                 height={44}
+//                 useSubmitBehavior={true}
+//                 disabled={loading}
+//                 validationGroup={GROUP}
+//               />
+//             </div>
+
+//           </form>
+//         </ValidationGroup>
+
+//         <div className="auth-links-row">
+//           <Link className="auth-link" to="/login">Back to login</Link>
+//           <Link className="auth-link" to="/reset-password">Already have token?</Link>
+//         </div>
+
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";

@@ -1,0 +1,163 @@
+/* ─── Container ─────────────────────────────────────── */
+.profile-container {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ─── Title ─────────────────────────────────────── */
+.profile-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+/* ─── Profile Card ─────────────────────────────────────── */
+.profile-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Profile Info Section ─────────────────────────────────────── */
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-info-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.profile-info-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ─── Profile Status Card ─────────────────────────────────────── */
+.profile-status-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.profile-status-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.profile-status-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.profile-status-value.verified {
+  color: #16a34a;
+}
+
+.profile-status-value.not-verified {
+  color: #dc2626;
+}
+
+/* ─── Form Container ─────────────────────────────────────── */
+.password-form-container {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.password-form-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+/* ─── Form Fields ─────────────────────────────────────── */
+.password-field {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.password-field:last-of-type {
+  margin-bottom: 24px;
+}
+
+.password-field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.password-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── TextBox Style (DevExtreme) ─────────────────────────────────────── */
+.password-field .dx-textbox {
+  width: 100%;
+}
+
+/* ─── Eye Toggle Button ─────────────────────────────────────── */
+.eye-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.eye-toggle-btn:hover {
+  color: #374151;
+}
+
+.eye-toggle-btn:focus {
+  outline: none;
+}
+
+/* ─── Form Button ─────────────────────────────────────── */
+.password-form-submit {
+  width: 100%;
+  height: 44px;
+}
+
+/* ─── Loading State ─────────────────────────────────────── */
+.profile-loading {
+  padding: 24px;
+  font-size: 16px;
+  color: #6b7280;
+}

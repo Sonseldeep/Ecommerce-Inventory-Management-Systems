@@ -119,7 +119,7 @@ export default function AdminNotificationBell() {
               items.map((n) => (
                 <div key={n.id} className="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-default">
                   <div className="flex gap-3">
-                    <div className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${n.type === 'order' ? 'bg-green-100' : 'bg-amber-100'}`}>
+                    <div className={`mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${n.type === 'order' ? 'bg-green-100' : 'bg-amber-100'}`}>
                       {n.type === "lowstock" ? "⚠️" : "🛒"}
                     </div>
                     <div className="flex-1">
