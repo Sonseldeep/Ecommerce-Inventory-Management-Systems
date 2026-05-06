@@ -15,7 +15,8 @@ public static class CartMappingExtensions
             SKU = i.Product?.SKU ?? string.Empty,
             Quantity = i.Quantity,
             UnitPrice = i.UnitPrice,
-            LineTotal = i.UnitPrice * i.Quantity
+            LineTotal = i.UnitPrice * i.Quantity,
+            ImageUrl = i.Product?.Images?.OrderBy(x => x.SortOrder).FirstOrDefault()?.ImageUrl
         }).ToList();
 
         return new CartResponseDto
