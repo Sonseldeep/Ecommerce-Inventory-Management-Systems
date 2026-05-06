@@ -1,14 +1,9 @@
-
-
-
-
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { getCategoriesApi } from "../../../../api/categoryApi";
 import { createProductApi, deleteProductApi, getProductsApi, updateProductApi, uploadProductImagesApi } from "../../../../api/productApi";
 import { createNotificationsHub } from "../../../../realtime/signalr";
 
-// --- FIX: Import the CORRECT hub factory ---
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
