@@ -14,6 +14,7 @@ public class CartRepository : Repository<Cart>, ICartRepository
         return _db.Carts
             .Include(x => x.Items.Where(i => !i.IsDeleted))
             .ThenInclude(i => i.Product)
+            .ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted, ct);
     }
 }
