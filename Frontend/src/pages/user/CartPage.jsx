@@ -1,8 +1,12 @@
-
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { getMyCartApi, removeCartItemApi, updateCartItemApi } from "../../api/cartApi";
+import {
+  getMyCartApi,
+  removeCartItemApi,
+  updateCartItemApi,
+} from "../../api/cartApi";
 import { useCart } from "../../context/CartContext";
 
 export default function CartPage() {
@@ -16,7 +20,9 @@ export default function CartPage() {
   };
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const total = useMemo(() => Number(cart?.totalAmount || 0), [cart]);
 
@@ -47,32 +53,79 @@ export default function CartPage() {
       toast.error(e?.response?.data?.message || "Failed to remove item");
     }
   };
-
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-3xl font-bold">My Cart</h1>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">Shopping Cart</h1>
+
+      {(cart.items || []).length === 0 && (
+        <div className="text-center py-20 text-gray-500">
+          <p className="text-lg">Your cart is empty 🛒</p>
+        </div>
+      )}
 
       {(cart.items || []).map((i) => (
-        <div key={getCartItemId(i)} className="bg-white rounded-2xl shadow p-4 flex justify-between items-center">
-          <div>
-            <p className="font-semibold">{i.productName}</p>
-            <p className="text-sm text-gray-500">₹ {i.unitPrice}</p>
+        <div
+          key={getCartItemId(i)}
+          className="bg-white rounded-2xl shadow-sm hover:shadow-md transition p-4 flex gap-4 items-center"
+        >
+          {/* Product Image */}
+          <img
+            src={i.imageUrl || "/placeholder.png"}
+            alt={i.productName}
+            className="w-20 h-20 object-cover rounded-xl border"
+          />
+
+          {/* Product Info */}
+          <div className="flex-1">
+            <p className="font-semibold text-lg">{i.productName}</p>
+            <p className="text-gray-500 text-sm">₹ {i.unitPrice}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <button className="w-8 h-8 border rounded" onClick={() => updateQty(i, Number(i.quantity) - 1)}>-</button>
-            <span>{i.quantity}</span>
-            <button className="w-8 h-8 border rounded" onClick={() => updateQty(i, Number(i.quantity) + 1)}>+</button>
-            <button className="ml-3 text-red-600" onClick={() => removeItem(i)}>Remove</button>
+
+          {/* Quantity Controls */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center border rounded-full overflow-hidden">
+              <button
+                className="px-3 py-1 hover:bg-gray-100"
+                onClick={() => updateQty(i, Number(i.quantity) - 1)}
+              >
+                −
+              </button>
+              <span className="px-4">{i.quantity}</span>
+              <button
+                className="px-3 py-1 hover:bg-gray-100"
+                onClick={() => updateQty(i, Number(i.quantity) + 1)}
+              >
+                +
+              </button>
+            </div>
+
+            {/* Remove */}
+            <button
+              className="text-sm text-red-500 hover:text-red-700 transition"
+              onClick={() => removeItem(i)}
+            >
+              Remove
+            </button>
           </div>
         </div>
       ))}
 
-      <div className="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
-        <p className="font-bold text-lg">Total: ₹ {total.toFixed(2)}</p>
-        <button className="bg-black text-white px-4 py-2 rounded-lg" onClick={() => navigate("/checkout")}>
-          Proceed to Checkout
-        </button>
-      </div>
+      {/* Summary Section */}
+      {(cart.items || []).length > 0 && (
+        <div className="sticky bottom-4 bg-white rounded-2xl shadow-lg p-5 flex items-center justify-between">
+          <div>
+            <p className="text-gray-500 text-sm">Total</p>
+            <p className="text-2xl font-bold">₹ {total.toFixed(2)}</p>
+          </div>
+
+          <button
+            className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition"
+            onClick={() => navigate("/checkout")}
+          >
+            Checkout →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
