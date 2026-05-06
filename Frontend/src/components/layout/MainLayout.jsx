@@ -38,19 +38,24 @@ export default function MainLayout() {
           <nav className="flex items-center gap-4 text-sm">
             {isAuthenticated ? (
               <>
-                <Link to="/products">Products</Link>
-                <Link to="/addresses">Addresses</Link>
-                <Link to="/orders">Orders</Link>
+                {/* USER LINKS (HIDDEN FOR ADMIN) */}
+                {user?.role !== "Admin" && (
+                  <>
+                    <Link to="/products">Products</Link>
+                    <Link to="/addresses">Addresses</Link>
+                    <Link to="/orders">Orders</Link>
 
-                {/* CART */}
-                <Link to="/cart" className="relative">
-                  Cart
-                  {count > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">
-                      {count}
-                    </span>
-                  )}
-                </Link>
+                    {/* CART */}
+                    <Link to="/cart" className="relative">
+                      Cart
+                      {count > 0 && (
+                        <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">
+                          {count}
+                        </span>
+                      )}
+                    </Link>
+                  </>
+                )}
 
                 <Link to="/profile">Profile</Link>
 
@@ -58,7 +63,7 @@ export default function MainLayout() {
                 {user?.role === "Admin" && (
                   <>
                     <span className="text-gray-300">|</span>
-                    <Link to="/admin/dashboard">Admin</Link>
+                    <Link to="/admin/dashboard">Admin Dashboard</Link>
                     <Link to="/admin/categories">Categories</Link>
                     <Link to="/admin/products">Products</Link>
                     <Link to="/admin/orders">Orders</Link>
