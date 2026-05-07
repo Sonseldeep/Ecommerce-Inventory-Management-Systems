@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable react-hooks/immutability */
 
 
@@ -295,8 +296,51 @@ export default function ProductsGrid({
             </span>
           )}
         />
-
         <Column
+  caption="Actions"
+  width={140}
+  allowFiltering={false}
+  allowSorting={false}
+  allowExporting={false}
+  cellRender={({ data }) => (
+    <div style={{ display: "flex", gap: 6 }}>
+      <button
+        onClick={() => onEdit(data)}
+        style={{
+          padding: "4px 10px",
+          borderRadius: 6,
+          border: "none",
+          background: "#f3f4f6",
+          color: "#374151",
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        Edit
+      </button>
+      <button
+        onClick={() => onDelete(data.id)}
+        style={{
+          padding: "4px 10px",
+          borderRadius: 6,
+          border: "none",
+          background: "#fee2e2",
+          color: "#dc2626",
+          fontSize: 12,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        Delete
+      </button>
+    </div>
+  )}
+/>
+
+ 
+
+        {/* <Column
           caption="Actions"
           width={140}
           allowFiltering={false}
@@ -336,7 +380,7 @@ export default function ProductsGrid({
               </button>
             </div>
           )}
-        />
+        /> */}
 
         {/* ── Summary ──────────────────────────────────────────────── */}
         <Summary>
