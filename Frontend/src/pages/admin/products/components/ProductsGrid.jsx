@@ -4,7 +4,7 @@
 
 // v4
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import CustomStore from "devextreme/data/custom_store";
 import DataSource from "devextreme/data/data_source";
 import DataGrid, {
@@ -57,6 +57,9 @@ export default function ProductsGrid({
   onEdit,
   onDelete,
 }) {
+  // ── Delete confirmation state ─────────────────────────────────
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, productId: null });
+
   const getCategoryName = (row) =>
     categories.find((c) => c.id === row.categoryId)?.name || "—";
 
@@ -320,7 +323,7 @@ export default function ProductsGrid({
         Edit
       </button>
       <button
-        onClick={() => onDelete(data.id)}
+        onClick={() => setDeleteConfirm({ open: true, productId: data.id })}
         style={{
           padding: "4px 10px",
           borderRadius: 6,
@@ -389,6 +392,78 @@ export default function ProductsGrid({
           <TotalItem column="quantityInStock" summaryType="sum"   displayFormat="Total: {0}" />
         </Summary>
       </DataGrid>
+
+      {/* ── Delete Confirmation Modal ────────────────────────────── */}
+      {deleteConfirm.open && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 32,
+              maxWidth: 400,
+              boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            <h3 style={{ margin: "0 0 12px 0", fontSize: 18, fontWeight: 700, color: "#1f2937" }}>
+              Delete Product?
+            </h3>
+            <p style={{ margin: "0 0 24px 0", fontSize: 14, color: "#6b7280", lineHeight: 1.5 }}>
+              Are you sure you want to delete this product? This action cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setDeleteConfirm({ open: false, productId: null })}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 6,
+                  border: "1px solid #e5e7eb",
+                  background: "#f3f4f6",
+                  color: "#374151",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                No, Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(deleteConfirm.productId);
+                  setDeleteConfirm({ open: false, productId: null });
+                }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 6,
+                  border: "none",
+                  background: "#dc2626",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
