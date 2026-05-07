@@ -21,7 +21,19 @@ public static class CategoryMappingExtensions
         {
             Id = entity.Id,
             Name = entity.Name,
-            Description = entity.Description
+            Description = entity.Description,
+            ProductCount = 0
+        };
+    }
+    //  Overload for when you have product count available
+    public static CategoryResponseDto ToDto(this Category entity, int productCount)
+    {
+        return new CategoryResponseDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Description = entity.Description,
+            ProductCount = productCount
         };
     }
 }
