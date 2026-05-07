@@ -141,4 +141,78 @@ public class ProductImageService : IProductImageService
 
         _logger.LogInformation("Product image deleted. ProductId: {ProductId}, ImageId: {ImageId}", productId, imageId);
     }
+
+    public async Task<ProductImageDto> ReplaceProductImageAsync(
+    Guid productId, 
+    Guid imageId, 
+    IFormFile file, 
+    bool isPrimary = false,
+    CancellationToken ct = default)
+{
+    // Validate file
+    if (file is null || file.Length == 0)
+    {
+        throw new BadRequestException("Image file is required.");
+    }
+
+    if (file.Length > MaxFileSize)
+    {
+        throw new BadRequestException("Image size cannot exceed 5MB.");
+    }
+
+    if (!AllowedTypes.Contains(file.ContentType.ToLower()))
+    {
+        throw new BadRequestException("Only jpg, png, webp are allowed.");
+    }
+
+    // Find product and image
+    var product = await _products.GetByIdWithDetailsAsync(productId, ct);
+    if (product is null)
+    {
+        throw new NotFoundException("Product not found.");
+    }
+
+    var image = product.Images.FirstOrDefault(x => x.Id == imageId && !x.IsDeleted);
+    if (image is null)
+    {
+        throw new NotFoundException("Image not found.");
+    }
+
+    // Upload new image
+    await using var stream = file.OpenReadStream();
+    var newImageUrl = await _fileStorage.UploadImageAsync(stream, file.FileName, file.ContentType, ct);
+
+    // Delete old image from storage (if you want to)
+    // await _fileStorage.DeleteImageAsync(image.ImageUrl, ct);
+
+    // Update the image with new URL
+    image.ImageUrl = newImageUrl;
+
+    // If making it primary, remove primary from others
+    if (isPrimary)
+    {
+        foreach (var img in product.Images.Where(x => !x.IsDeleted && x.IsPrimary && x.Id != imageId))
+        {
+            img.IsPrimary = false;
+            _images.Update(img);
+        }
+        image.IsPrimary = true;
+    }
+
+    _images.Update(image);
+    await _uow.SaveChangesAsync(ct);
+
+    _logger.LogInformation(
+        "Product image replaced. ProductId: {ProductId}, ImageId: {ImageId}", 
+        productId, imageId);
+
+    return new ProductImageDto
+    {
+        Id = image.Id,
+        ImageUrl = image.ImageUrl,
+        IsPrimary = image.IsPrimary,
+        SortOrder = image.SortOrder
+    };
+}
+   
 }

@@ -1,4 +1,4 @@
-export const ALLOWED_PAGE_SIZES = [10, 25, 50, 100];
+export const ALLOWED_PAGE_SIZES = [10, 20, 30];
 
 export const EMPTY_FORM = {
   name: "",

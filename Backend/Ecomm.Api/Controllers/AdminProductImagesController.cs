@@ -40,4 +40,17 @@ public class AdminProductImagesController : ControllerBase
         await _service.DeleteProductImageAsync(productId, imageId, ct);
         return Ok(ApiResponse<string>.Ok("Deleted", "Image deleted"));
     }
+    
+    [HttpPut("{imageId:guid}")]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    public async Task<IActionResult> Update(
+        [FromRoute] Guid productId, 
+        [FromRoute] Guid imageId, 
+        [FromForm] IFormFile file,
+        [FromQuery] bool isPrimary = false,
+        CancellationToken ct = default)
+    {
+        var data = await _service.ReplaceProductImageAsync(productId, imageId, file, isPrimary, ct);
+        return Ok(ApiResponse<ProductImageDto>.Ok(data, "Image replaced successfully"));
+    }
 }

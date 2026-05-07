@@ -26,6 +26,7 @@ public class ProductsController : ControllerBase
             data,
             "Products fetched successfully"
         ));
+        
     }
 
 
