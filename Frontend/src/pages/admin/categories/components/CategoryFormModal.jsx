@@ -70,7 +70,7 @@ export default function CategoryFormModal({ editData, submitting, onSubmit, onCl
           }}
         >
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-            {isEdit ? "✏️ Edit Category" : "➕ New Category"}
+            {isEdit ? " Edit Category" : "➕ New Category"}
           </h2>
           <button
             onClick={onClose}

@@ -1,10 +1,119 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+// import { Link, Outlet, useNavigate } from "react-router-dom";
+// import { useAuth } from "../../context/AuthContext";
+// import { useCart } from "../../context/CartContext";
+// import toast from "react-hot-toast";
+// import AdminNotificationBell from "../../pages/admin/AdminNotificationBell";
+
+// // 🔔 Admin notification bell
+
+// export default function MainLayout() {
+//   const { user, logout, isAuthenticated } = useAuth();
+//   const { count } = useCart();
+//   const navigate = useNavigate();
+
+//   const onLogout = async () => {
+//     await logout();
+//     toast.success("Logged out");
+//     navigate("/login");
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-slate-100">
+//       {/* HEADER */}
+//       <header className="bg-white/90 backdrop-blur border-b sticky top-0 z-50">
+//         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+
+//           {/* LOGO */}
+//           <Link
+//             to={isAuthenticated ? "/products" : "/login"}
+//             className="font-extrabold text-xl"
+//           >
+//             Ecomm
+//           </Link>
+
+//           {/* NAVIGATION */}
+//           <nav className="flex items-center gap-4 text-sm">
+//             {isAuthenticated ? (
+//               <>
+//                 {/* USER LINKS (HIDDEN FOR ADMIN) */}
+//                 {user?.role !== "Admin" && (
+//                   <>
+//                     <Link to="/products">Products</Link>
+//                     <Link to="/addresses">Addresses</Link>
+//                     <Link to="/orders">Orders</Link>
+
+//                     {/* CART */}
+//                     <Link to="/cart" className="relative">
+//                       Cart
+//                       {count > 0 && (
+//                         <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">
+//                           {count}
+//                         </span>
+//                       )}
+//                     </Link>
+//                   </>
+//                 )}
+
+//                 <Link to="/profile">Profile</Link>
+
+//                 {/* ADMIN LINKS */}
+//                 {user?.role === "Admin" && (
+//                   <>
+//                     <span className="text-gray-300">|</span>
+//                     <Link to="/admin/dashboard">Admin Dashboard</Link>
+//                     <Link to="/admin/categories">Categories</Link>
+//                     <Link to="/admin/products">Products</Link>
+//                     <Link to="/admin/orders">Orders</Link>
+//                   </>
+//                 )}
+//               </>
+//             ) : (
+//               <>
+//                 <Link to="/login">Login</Link>
+//                 <Link to="/register">Signup</Link>
+//               </>
+//             )}
+//           </nav>
+
+//           {/* RIGHT SIDE (USER + NOTIFICATION + LOGOUT) */}
+//           {isAuthenticated && (
+//             <div className="flex items-center gap-4">
+
+//               {/* 🔔 ADMIN NOTIFICATION BELL (ONLY ADMIN) */}
+//               {user?.role === "Admin" && (
+//                 <AdminNotificationBell />
+//               )}
+
+//               {/* USER EMAIL */}
+//               <span className="text-sm hidden md:inline">
+//                 {user?.email}
+//               </span>
+
+//               {/* LOGOUT */}
+//               <button
+//                 onClick={onLogout}
+//                 className="bg-black text-white px-3 py-1.5 rounded"
+//               >
+//                 Logout
+//               </button>
+//             </div>
+//           )}
+//         </div>
+//       </header>
+
+//       {/* PAGE CONTENT */}
+//       <main className="max-w-7xl mx-auto py-4">
+//         <Outlet />
+//       </main>
+//     </div>
+//   );
+// }
+
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import toast from "react-hot-toast";
 import AdminNotificationBell from "../../pages/admin/AdminNotificationBell";
-
-// 🔔 Admin notification bell
 
 export default function MainLayout() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -16,6 +125,14 @@ export default function MainLayout() {
     toast.success("Logged out");
     navigate("/login");
   };
+
+  // ✅ Reusable nav style
+  const navLinkClass = ({ isActive }) =>
+    `px-3 py-1.5 rounded-md transition text-sm font-medium ${
+      isActive
+        ? "bg-black text-white"
+        : "text-gray-700 hover:bg-gray-100"
+    }`;
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -32,54 +149,105 @@ export default function MainLayout() {
           </Link>
 
           {/* NAVIGATION */}
-          <nav className="flex items-center gap-4 text-sm">
+          <nav className="flex items-center gap-2 text-sm">
+
             {isAuthenticated ? (
               <>
-                {/* USER LINKS (HIDDEN FOR ADMIN) */}
+                {/* USER NAVIGATION */}
                 {user?.role !== "Admin" && (
                   <>
-                    <Link to="/products">Products</Link>
-                    <Link to="/addresses">Addresses</Link>
-                    <Link to="/orders">Orders</Link>
+                    <NavLink to="/products" className={navLinkClass}>
+                      Products
+                    </NavLink>
+
+                    <NavLink to="/addresses" className={navLinkClass}>
+                      Addresses
+                    </NavLink>
+
+                    <NavLink to="/orders" className={navLinkClass}>
+                      Orders
+                    </NavLink>
 
                     {/* CART */}
-                    <Link to="/cart" className="relative">
+                    <NavLink
+                      to="/cart"
+                      className={({ isActive }) =>
+                        `relative px-3 py-1.5 rounded-md transition text-sm font-medium ${
+                          isActive
+                            ? "bg-black text-white"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`
+                      }
+                    >
                       Cart
+
                       {count > 0 && (
-                        <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5">
                           {count}
                         </span>
                       )}
-                    </Link>
+                    </NavLink>
                   </>
                 )}
 
-                <Link to="/profile">Profile</Link>
+                {/* PROFILE */}
+                <NavLink to="/profile" className={navLinkClass}>
+                  Profile
+                </NavLink>
 
-                {/* ADMIN LINKS */}
+                {/* ADMIN NAVIGATION */}
                 {user?.role === "Admin" && (
                   <>
-                    <span className="text-gray-300">|</span>
-                    <Link to="/admin/dashboard">Admin Dashboard</Link>
-                    <Link to="/admin/categories">Categories</Link>
-                    <Link to="/admin/products">Products</Link>
-                    <Link to="/admin/orders">Orders</Link>
+                    <span className="text-gray-300 mx-1">|</span>
+
+                    <NavLink
+                      to="/admin/dashboard"
+                      className={navLinkClass}
+                    >
+                      Dashboard
+                    </NavLink>
+
+                    <NavLink
+                      to="/admin/categories"
+                      className={navLinkClass}
+                    >
+                      Categories
+                    </NavLink>
+
+                    <NavLink
+                      to="/admin/products"
+                      className={navLinkClass}
+                    >
+                      Products
+                    </NavLink>
+
+                    <NavLink
+                      to="/admin/orders"
+                      className={navLinkClass}
+                    >
+                      Orders
+                    </NavLink>
                   </>
                 )}
               </>
             ) : (
               <>
-                <Link to="/login">Login</Link>
-                <Link to="/register">Signup</Link>
+                <NavLink to="/login" className={navLinkClass}>
+                  Login
+                </NavLink>
+
+                <NavLink to="/register" className={navLinkClass}>
+                  Signup
+                </NavLink>
               </>
             )}
           </nav>
 
-          {/* RIGHT SIDE (USER + NOTIFICATION + LOGOUT) */}
+          {/* RIGHT SIDE */}
           {isAuthenticated && (
             <div className="flex items-center gap-4">
 
-              {/* 🔔 ADMIN NOTIFICATION BELL (ONLY ADMIN) */}
+              {/* ADMIN NOTIFICATION */}
               {user?.role === "Admin" && (
                 <AdminNotificationBell />
               )}
@@ -92,7 +260,7 @@ export default function MainLayout() {
               {/* LOGOUT */}
               <button
                 onClick={onLogout}
-                className="bg-black text-white px-3 py-1.5 rounded"
+                className="bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium hover:opacity-90 transition"
               >
                 Logout
               </button>
