@@ -2,7 +2,6 @@
 /* eslint-disable react-hooks/immutability */
 
 
-// v4
 
 import { useState, useMemo } from "react";
 import CustomStore from "devextreme/data/custom_store";
@@ -28,28 +27,6 @@ import { getProductsApi } from "../../../../api/productApi";
 import { ALLOWED_PAGE_SIZES } from "../constant";
 import { handleGridExport } from "../utils/exportHelper";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WHY THE DEBOUNCE IS NEEDED
-//
-// When the user changes the page-size dropdown (e.g. 10 → 20), DevExtreme
-// fires load() TWICE in quick succession:
-//
-//   Call 1 (stale):   { skip: 10, take: 10 }  → pageNumber 2, pageSize 10  ← wrong
-//   Call 2 (correct): { skip:  0, take: 20 }  → pageNumber 1, pageSize 20  ← right
-//
-// Without debouncing both calls hit your backend. The UI ends up correct
-// because call 2 wins, but call 1 is a wasted / misleading backend hit.
-//
-// The debounce (80 ms) collapses the two calls into one: the timer resets on
-// every call, so only the last set of loadOptions reaches getProductsApi.
-//
-// HOW THE PROMISE REUSE WORKS
-//
-// DevExtreme expects load() to return a Promise. Both call 1 and call 2
-// receive the SAME promise object. When the debounce timer fires it resolves
-// that shared promise with the data from call 2's (correct) loadOptions.
-// DevExtreme sees one resolved promise → one clean render.
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function ProductsGrid({
   gridRef,
@@ -57,14 +34,14 @@ export default function ProductsGrid({
   onEdit,
   onDelete,
 }) {
-  // ── Delete confirmation state ─────────────────────────────────
+  //  Delete confirmation state 
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, productId: null });
 
   const getCategoryName = (row) =>
     categories.find((c) => c.id === row.categoryId)?.name || "—";
 
   const dataSource = useMemo(() => {
-    // ── Debounce state (closure variables, live inside useMemo) ────────────
+  
     let debounceTimer   = null;
     let currentPromise  = null;
     let currentResolve  = null;
@@ -156,37 +133,19 @@ export default function ProductsGrid({
         {/* ── Toolbar ──────────────────────────────────────────────── */}
         <Toolbar>
           <Item name="groupPanel" />
-          {/* <Item location="before">
-            <button
-              onClick={onAddNew}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "none",
-                background: "#111",
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              + Add Product
-            </button>
-          </Item> */}
+      
           <Item name="searchPanel" />
           <Item name="columnChooserButton" showText="inMenu" />
           <Item name="exportButton" />
         </Toolbar>
 
         <SearchPanel visible width={220} placeholder="Search products…" />
-        {/* <FilterRow visible />
-        <HeaderFilter visible /> */}
+       
         <GroupPanel visible />
         <Grouping autoExpandAll={false} />
         <ColumnChooser enabled mode="select" />
-        {/* <Selection mode="multiple" showCheckBoxesMode="always" /> */}
 
-        {/* ── Pagination ───────────────────────────────────────────── */}
+        {/* Pagination */}
         <Paging defaultPageSize={10} />
         <Pager
           visible={true}
@@ -195,10 +154,9 @@ export default function ProductsGrid({
           allowedPageSizes={ALLOWED_PAGE_SIZES}
           showInfo={true}
           showNavigationButtons={true}
-          // infoText="Page {0} of {1} ({2} products)"
         />
 
-        {/* ── Export ───────────────────────────────────────────────── */}
+        {/*  Export */}
         <Export
           enabled
           formats={["xlsx", "pdf"]}
@@ -210,7 +168,7 @@ export default function ProductsGrid({
           }}
         />
 
-        {/* ── Columns ──────────────────────────────────────────────── */}
+        {/*  Columns  */}
         <Column dataField="name"  caption="Product Name" minWidth={180} />
         <Column dataField="sku"   caption="SKU"          width={130} />
 
@@ -343,47 +301,6 @@ export default function ProductsGrid({
 
  
 
-        {/* <Column
-          caption="Actions"
-          width={140}
-          allowFiltering={false}
-          allowSorting={false}
-          allowExporting={false}
-          cellRender={({ data }) => (
-            <div style={{ display: "flex", gap: 6 }}>
-              <button
-                onClick={() => onEdit(data)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#f3f4f6",
-                  color: "#374151",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                 Edit
-              </button>
-              <button
-                onClick={() => onDelete(data.id)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#fee2e2",
-                  color: "#dc2626",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          )}
-        /> */}
 
         {/* ── Summary ──────────────────────────────────────────────── */}
         <Summary>
@@ -393,7 +310,7 @@ export default function ProductsGrid({
         </Summary>
       </DataGrid>
 
-      {/* ── Delete Confirmation Modal ────────────────────────────── */}
+      {/*  Delete Confirmation Modal  */}
       {deleteConfirm.open && (
         <div
           style={{

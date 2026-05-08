@@ -119,8 +119,6 @@
 //   );
 // }
 
-
-
 import { useState } from "react";
 import { useCategories } from "./hooks/useCategories";
 import CategoriesGrid from "./components/CategoriesGrid";
@@ -133,6 +131,7 @@ export default function AdminCategoriesPage() {
   });
 
   const {
+    gridRef, // Get the ref from the hook
     submitting,
     createCategory,
     updateCategory,
@@ -151,15 +150,16 @@ export default function AdminCategoriesPage() {
     if (success) closeModal();
   };
 
+  // CORRECTED: The ugly window.confirm is gone!
+  // The custom modal in CategoriesGrid now handles confirmation.
   const handleDelete = async (id) => {
-    if (window.confirm("Delete this category?")) {
-      await deleteCategory(id);
-    }
+    await deleteCategory(id);
   };
 
   return (
     <div style={{ padding: 24 }}>
       <CategoriesGrid
+        gridRef={gridRef} // Pass the ref down to the grid
         onEdit={openEdit}
         onDelete={handleDelete}
         onAddNew={openCreate}
@@ -176,3 +176,60 @@ export default function AdminCategoriesPage() {
     </div>
   );
 }
+
+
+// import { useState } from "react";
+// import { useCategories } from "./hooks/useCategories";
+// import CategoriesGrid from "./components/CategoriesGrid";
+// import CategoryFormModal from "./components/CategoryFormModal";
+
+// export default function AdminCategoriesPage() {
+//   const [modalState, setModalState] = useState({
+//     open: false,
+//     editData: null,
+//   });
+
+//   const {
+//     submitting,
+//     createCategory,
+//     updateCategory,
+//     deleteCategory,
+//   } = useCategories();
+
+//   const openCreate = () => setModalState({ open: true, editData: null });
+//   const openEdit = (row) => setModalState({ open: true, editData: row });
+//   const closeModal = () => setModalState({ open: false, editData: null });
+
+//   const handleSubmit = async (payload) => {
+//     const success = modalState.editData
+//       ? await updateCategory(modalState.editData.id, payload)
+//       : await createCategory(payload);
+
+//     if (success) closeModal();
+//   };
+
+//   const handleDelete = async (id) => {
+//     if (window.confirm("Delete this category?")) {
+//       await deleteCategory(id);
+//     }
+//   };
+
+//   return (
+//     <div style={{ padding: 24 }}>
+//       <CategoriesGrid
+//         onEdit={openEdit}
+//         onDelete={handleDelete}
+//         onAddNew={openCreate}
+//       />
+
+//       {modalState.open && (
+//         <CategoryFormModal
+//           editData={modalState.editData}
+//           submitting={submitting}
+//           onSubmit={handleSubmit}
+//           onClose={closeModal}
+//         />
+//       )}
+//     </div>
+//   );
+// }

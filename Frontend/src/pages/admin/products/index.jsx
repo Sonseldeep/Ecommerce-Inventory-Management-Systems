@@ -45,11 +45,13 @@ export default function AdminProductsPage() {
   };
 
   // ── Delete ────────────────────────────────────────────────────
-  const handleDelete = (id) => {
-    if (window.confirm("Delete this product? This action cannot be undone.")) {
-      deleteProduct(id);
-    }
-  };
+const handleDelete = async (id) => {
+  try {
+    await deleteProduct(id);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   return (
     <div

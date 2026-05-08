@@ -37,7 +37,8 @@ public class AdminOrderService : IAdminOrderService
         };
     }
 
-    public async Task<OrderResponseDto> UpdateStatusAsync(Guid orderId, int status, CancellationToken ct = default)
+    public async Task<OrderResponseDto> UpdateStatusAsync(Guid orderId, OrderStatus status,
+        CancellationToken ct = default)
     {
         if (!Enum.IsDefined(typeof(OrderStatus), status))
             throw new BadRequestException("Invalid order status.");

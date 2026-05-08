@@ -398,7 +398,7 @@ function OrderCard({ order }) {
           <div>
             <div className="order-total-label">Total</div>
             <div className="order-total">
-              ₹ {Number(order.totalAmount).toLocaleString("en-IN")}
+              Rs  {Number(order.totalAmount).toLocaleString("en-IN")}
             </div>
           </div>
           <span className={`status-badge status-${statusNum}`}>
@@ -737,7 +737,7 @@ export default function OrdersPage() {
 //               <p className="font-semibold">Order #{o.orderNumber}</p>
 //               <p className="text-sm">{o.orderStatus}</p>
 //             </div>
-//             <p className="text-sm text-gray-500">Total: ₹ {o.totalAmount}</p>
+//             <p className="text-sm text-gray-500">Total: Rs  {o.totalAmount}</p>
 //             <div className="mt-3 space-y-1">
 //               {(o.items || []).map((it) => (
 //                 <div key={it.id} className="text-sm">
