@@ -25,12 +25,20 @@ export default function CategoryFormModal({ editData, submitting, onSubmit, onCl
   const isEdit = !!editData;
   const [form, setForm] = useState(
     isEdit
-      ? { name: editData.name || "", description: editData.description || "" }
+      ? { 
+          name: editData.name || "", 
+          description: editData.description || "", 
+          isActive: editData.isActive ?? true 
+        }
       : { ...EMPTY_FORM }
   );
 
   const set = (field) => (e) =>
     setForm((s) => ({ ...s, [field]: e.target.value }));
+
+  const toggleActive = () => {
+    setForm((s) => ({ ...s, isActive: !s.isActive }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,7 +78,7 @@ export default function CategoryFormModal({ editData, submitting, onSubmit, onCl
           }}
         >
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-            {isEdit ? " Edit Category" : "➕ New Category"}
+            {isEdit ? "Edit Category" : "New Category"}
           </h2>
           <button
             onClick={onClose}
@@ -110,6 +118,64 @@ export default function CategoryFormModal({ editData, submitting, onSubmit, onCl
                 placeholder="Optional description…"
               />
             </div>
+
+            {/* ─────────────────────────────────────────────────────────
+                ELEGANT STATUS TOGGLE (SENIOR UX/UI)
+                ───────────────────────────────────────────────────────── */}
+            {isEdit && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "14px 16px",
+                  background: form.isActive ? "#f0fdf4" : "#fef2f2",
+                  border: form.isActive ? "1.5px solid #bbf7d0" : "1.5px solid #fecaca",
+                  borderRadius: 12,
+                  transition: "all 0.3s ease",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 4px 0" }}>
+                    Category Status
+                  </p>
+                  <p style={{ 
+                    fontSize: 11, 
+                    color: form.isActive ? "#166534" : "#991b1b",
+                    margin: 0,
+                    fontWeight: 500,
+                  }}>
+                    {form.isActive 
+                      ? "Active - Products can be added" 
+                      : "Inactive - Products cannot be added"}
+                  </p>
+                </div>
+
+                {/* Toggle Button - Smooth Animation */}
+                <button
+                  type="button"
+                  onClick={toggleActive}
+                  disabled={submitting}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    border: "none",
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: form.isActive ? "#16a34a" : "#dc2626",
+                    color: "#fff",
+                    transition: "all 0.3s ease",
+                    opacity: submitting ? 0.7 : 1,
+                  }}
+                >
+                  {form.isActive ? "Active" : "Inactive"}
+                </button>
+              </div>
+            )}
 
             {/* Actions */}
             <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>

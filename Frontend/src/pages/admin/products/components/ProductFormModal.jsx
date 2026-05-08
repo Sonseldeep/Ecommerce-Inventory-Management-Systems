@@ -168,30 +168,72 @@ export default function ProductFormModal({
 
   // ── Handle form submit ────────────────────────────────────────────
   const handleSubmit = (e) => {
-    e.preventDefault();
-    // Double-check: do not submit if there's a file error.
-    if (fileError) {
-      toast.error("Please resolve the file upload error before submitting.");
+  e.preventDefault();
+  
+  // Double-check: do not submit if there's a file error.
+  if (fileError) {
+    toast.error("Please resolve the file upload error before submitting.");
+    return;
+  }
+
+  // ✅ NEW: Check if selected category is active
+  if (form.categoryId) {
+    const selectedCategory = categories.find((c) => c.id === form.categoryId);
+    if (!selectedCategory) {
+      toast.error("Invalid category selected.");
       return;
     }
-    const payload = {
-      ...form,
-      price: Number(form.price),
-      discountPrice:
-        form.discountPrice === "" || form.discountPrice === null
-          ? null
-          : Number(form.discountPrice),
-      quantityInStock: Number(form.quantityInStock),
-      reorderLevel: Number(form.reorderLevel),
-      categoryId: form.categoryId === "" ? null : form.categoryId,
-    };
-
-    if (isEdit) {
-      delete payload.sku;
+    if (selectedCategory.isActive === false) {
+      toast.error(
+        `Cannot add products to inactive category '${selectedCategory.name}'. Contact admin to activate this category.`
+      );
+      return;
     }
+  }
 
-    onSubmit(payload, files);
+  const payload = {
+    ...form,
+    price: Number(form.price),
+    discountPrice:
+      form.discountPrice === "" || form.discountPrice === null
+        ? null
+        : Number(form.discountPrice),
+    quantityInStock: Number(form.quantityInStock),
+    reorderLevel: Number(form.reorderLevel),
+    categoryId: form.categoryId === "" ? null : form.categoryId,
   };
+
+  if (isEdit) {
+    delete payload.sku;
+  }
+
+  onSubmit(payload, files);
+};
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   // Double-check: do not submit if there's a file error.
+  //   if (fileError) {
+  //     toast.error("Please resolve the file upload error before submitting.");
+  //     return;
+  //   }
+  //   const payload = {
+  //     ...form,
+  //     price: Number(form.price),
+  //     discountPrice:
+  //       form.discountPrice === "" || form.discountPrice === null
+  //         ? null
+  //         : Number(form.discountPrice),
+  //     quantityInStock: Number(form.quantityInStock),
+  //     reorderLevel: Number(form.reorderLevel),
+  //     categoryId: form.categoryId === "" ? null : form.categoryId,
+  //   };
+
+  //   if (isEdit) {
+  //     delete payload.sku;
+  //   }
+
+  //   onSubmit(payload, files);
+  // };
 
   const clearFiles = () => {
     fileUploaderRef.current.instance.reset();
@@ -365,8 +407,80 @@ export default function ProductFormModal({
                 />
               </div>
             </div>
-
             <div>
+  <label style={labelStyle}>Category *</label>
+  {(() => {
+    const activeCategories = categories.filter((c) => c.isActive === true);
+    
+    return (
+      <>
+        <select
+          style={inputStyle}
+          value={form.categoryId}
+          onChange={set("categoryId")}
+          required
+          disabled={activeCategories.length === 0}
+        >
+          <option value="">
+            {activeCategories.length === 0
+              ? "— No Active Categories —"
+              : "— Select Category —"}
+          </option>
+          {activeCategories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        
+        {activeCategories.length === 0 && (
+          <p
+            style={{
+              fontSize: 11,
+              color: "#dc2626",
+              marginTop: 4,
+              fontWeight: 500,
+            }}
+          >
+            ⚠️ No active categories available. Contact admin to activate a category.
+          </p>
+        )}
+      </>
+    );
+  })()}
+</div>
+
+   {/* ⚠️ NEW: Show warning if editing product with inactive category */}
+            {isEdit && form.categoryId && (() => {
+              const selectedCategory = categories.find((c) => c.id === form.categoryId);
+              return selectedCategory && selectedCategory.isActive === false ? (
+                <div
+                  style={{
+                    background: "#fef2f2",
+                    border: "1.5px solid #fecaca",
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                    display: "flex",
+                    gap: 10,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div style={{ fontSize: 18, marginTop: 2 }}>⚠️</div>
+                  <div>
+                    <p style={{ fontSize: 12, fontWeight: 600, color: "#dc2626", margin: "0 0 4px 0" }}>
+                      Inactive Category
+                    </p>
+                    <p style={{ fontSize: 11, color: "#b91c1c", margin: 0 }}>
+                      This product is assigned to an inactive category: <strong>{selectedCategory.name}</strong>. 
+                      New products cannot be added to this category until it's reactivated.
+                    </p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+
+            {/* <div>
               <label style={labelStyle}>Category *</label>
               <select
                 style={inputStyle}
@@ -381,7 +495,7 @@ export default function ProductFormModal({
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             <div>
               <label style={labelStyle}>Status</label>
