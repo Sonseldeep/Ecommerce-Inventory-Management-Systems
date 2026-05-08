@@ -125,11 +125,12 @@ public class CategoryService : ICategoryService
 
         category.Name = name;
         category.Description = request.Description?.Trim();
+        category.IsActive = request.IsActive;
 
         _categories.Update(category);
         await _uow.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Category updated: {CategoryId}", id);
+        _logger.LogInformation("Category updated: {CategoryId}, IsActive: {IsActive}", id, request.IsActive);
 
         var productCount = await _products.Query()
             .CountAsync(p => p.CategoryId == id && !p.IsDeleted, ct);
