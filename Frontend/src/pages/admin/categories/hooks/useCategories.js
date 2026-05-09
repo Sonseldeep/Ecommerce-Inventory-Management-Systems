@@ -299,7 +299,6 @@
 //   };
 // }
 
-
 import { useState, useCallback, useRef } from "react";
 import toast from "react-hot-toast";
 import {
@@ -312,107 +311,265 @@ export function useCategories() {
   const gridRef = useRef(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // ─── Optimistic UI: maps id → overridden isActive value ──────────────────
+  const [statusOverrides, setStatusOverrides] = useState({});
+
+  // ─── Double-fire guard (time-based) ──────────────────────────────────────
+  // DevExtreme fires its own synthetic cellClick event independently of the
+  // DOM event, and it can arrive AFTER the API call finishes — so a Set-based
+  // "processing" guard gets cleared too early and lets the duplicate through.
+  // A 600 ms window per id is long enough to absorb the duplicate but short
+  // enough to feel instant to the user.
+  const lastToggleAt = useRef({});
+  const TOGGLE_DEBOUNCE_MS = 600;
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
   const reloadGrid = useCallback(() => {
-    gridRef.current?.instance.refresh();
+    const comp = gridRef.current;
+    if (!comp) return;
+
+    // FIX: DevExtreme React ≥ 23 exposes `instance` as a getter *function*.
+    // Calling `comp.instance?.refresh()` passes `.refresh()` to the function
+    // object itself — it silently does nothing.
+    // We must call `comp.instance()` to get the actual widget, then refresh.
+    const inst =
+      typeof comp.instance === "function" ? comp.instance() : comp.instance;
+    inst?.refresh();
   }, []);
 
-  // --- THIS IS THE FINAL, CORRECTED FUNCTION ---
+  const clearOverride = useCallback((id) => {
+    setStatusOverrides((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  // ─── Toggle status (grid only) ────────────────────────────────────────────
   const toggleCategoryStatus = useCallback(
-    async (categoryToToggle) => {
-      const grid = gridRef.current?.instance;
-      if (!grid) return;
+    async (category) => {
+      // Time-based dedup: drop calls within 600 ms for the same id
+      const now = Date.now();
+      const last = lastToggleAt.current[category.id] || 0;
+      if (now - last < TOGGLE_DEBOUNCE_MS) return;
+      lastToggleAt.current[category.id] = now;
 
-      const newStatus = !categoryToToggle.isActive;
-      const rowIndex = grid.getRowIndexByKey(categoryToToggle.id);
+      const newStatus = !category.isActive;
 
-      // 1. Instantly update the UI (Optimistic Update)
-      grid.beginUpdate();
-      grid.cellValue(rowIndex, "isActive", newStatus);
-      grid.endUpdate();
+      // Instant optimistic UI — toggle flips before API responds
+      setStatusOverrides((prev) => ({ ...prev, [category.id]: newStatus }));
 
       try {
-        // 2. Make the API call and await the response
-        const response = await updateCategoryApi(categoryToToggle.id, {
-          ...categoryToToggle,
-          description: categoryToToggle.description || "", // Ensure description is not null
+        await updateCategoryApi(category.id, {
+          name: category.name,
+          description: category.description || "",
           isActive: newStatus,
         });
 
-        // 3. Check for a successful HTTP status (2xx). This handles 200, 204, etc.
-        if (response && response.status >= 200 && response.status < 300) {
-          toast.success("Status updated successfully");
-          // Optionally, refresh data in the background to ensure consistency
-          setTimeout(() => reloadGrid(), 500);
-        } else {
-          // If the status is not successful, manually throw an error
-          throw new Error("Server responded with an error.");
-        }
+        toast.success(
+          `"${category.name}" marked ${newStatus ? "Active" : "Inactive"}`
+        );
 
+        // Sync grid with real server data, then drop the local override
+        reloadGrid();
+        clearOverride(category.id);
       } catch (err) {
-        // 4. On actual failure, revert the UI and show an error toast
-        toast.error("Status update failed. Reverting.");
-        grid.beginUpdate();
-        grid.cellValue(rowIndex, "isActive", categoryToToggle.isActive);
-        grid.endUpdate();
+        // Revert optimistic update so the old value reappears
+        clearOverride(category.id);
+        toast.error(
+          err?.response?.data?.message || "Failed to update status. Try again."
+        );
+      }
+    },
+    [reloadGrid, clearOverride]
+  );
+
+  // ─── Create ───────────────────────────────────────────────────────────────
+  const createCategory = useCallback(
+    async (payload) => {
+      setSubmitting(true);
+      try {
+        await createCategoryApi(payload);
+        reloadGrid();
+        toast.success("Category created successfully");
+        return true;
+      } catch (err) {
+        toast.error(
+          err?.response?.data?.message || "Failed to create category"
+        );
+        return false;
+      } finally {
+        setSubmitting(false);
       }
     },
     [reloadGrid]
   );
 
-  const createCategory = useCallback(async (payload) => {
-    setSubmitting(true);
-    try {
-      await createCategoryApi(payload);
-      reloadGrid();
-      toast.success("Category created successfully");
-      return true;
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to create category");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [reloadGrid]);
+  // ─── Update ───────────────────────────────────────────────────────────────
+  const updateCategory = useCallback(
+    async (id, payload) => {
+      setSubmitting(true);
+      try {
+        await updateCategoryApi(id, payload);
+        reloadGrid();
+        toast.success("Category updated successfully");
+        return true;
+      } catch (err) {
+        toast.error(
+          err?.response?.data?.message || "Failed to update category"
+        );
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [reloadGrid]
+  );
 
-  const updateCategory = useCallback(async (id, payload) => {
-    setSubmitting(true);
-    try {
-      await updateCategoryApi(id, payload);
-      reloadGrid();
-      toast.success("Category updated successfully");
-      return true;
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to update category");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [reloadGrid]);
-
-  const deleteCategory = useCallback(async (id) => {
-    setSubmitting(true);
-    try {
-      await deleteCategoryApi(id);
-      reloadGrid();
-      toast.success("Category deleted successfully");
-      return true;
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Delete failed");
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [reloadGrid]);
+  // ─── Delete ───────────────────────────────────────────────────────────────
+  const deleteCategory = useCallback(
+    async (id) => {
+      setSubmitting(true);
+      try {
+        await deleteCategoryApi(id);
+        reloadGrid();
+        toast.success("Category deleted successfully");
+        return true;
+      } catch (err) {
+        toast.error(err?.response?.data?.message || "Delete failed");
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [reloadGrid]
+  );
 
   return {
     gridRef,
     submitting,
+    statusOverrides,
     createCategory,
     updateCategory,
     deleteCategory,
     toggleCategoryStatus,
   };
 }
+// aajako 
+
+// import { useState, useCallback, useRef } from "react";
+// import toast from "react-hot-toast";
+// import {
+//   createCategoryApi,
+//   deleteCategoryApi,
+//   updateCategoryApi,
+// } from "../../../../api/categoryApi";
+
+// export function useCategories() {
+//   const gridRef = useRef(null);
+//   const [submitting, setSubmitting] = useState(false);
+
+//   const reloadGrid = useCallback(() => {
+//     gridRef.current?.instance.refresh();
+//   }, []);
+
+//   // --- THIS IS THE FINAL, CORRECTED FUNCTION ---
+//   const toggleCategoryStatus = useCallback(
+//     async (categoryToToggle) => {
+//       const grid = gridRef.current?.instance;
+//       if (!grid) return;
+
+//       const newStatus = !categoryToToggle.isActive;
+//       const rowIndex = grid.getRowIndexByKey(categoryToToggle.id);
+
+//       // 1. Instantly update the UI (Optimistic Update)
+//       grid.beginUpdate();
+//       grid.cellValue(rowIndex, "isActive", newStatus);
+//       grid.endUpdate();
+
+//       try {
+//         // 2. Make the API call and await the response
+//         const response = await updateCategoryApi(categoryToToggle.id, {
+//           ...categoryToToggle,
+//           description: categoryToToggle.description || "", // Ensure description is not null
+//           isActive: newStatus,
+//         });
+
+//         // 3. Check for a successful HTTP status (2xx). This handles 200, 204, etc.
+//         if (response && response.status >= 200 && response.status < 300) {
+//           toast.success("Status updated successfully");
+//           // Optionally, refresh data in the background to ensure consistency
+//           setTimeout(() => reloadGrid(), 500);
+//         } else {
+//           // If the status is not successful, manually throw an error
+//           throw new Error("Server responded with an error.");
+//         }
+
+//       } catch (err) {
+//         // 4. On actual failure, revert the UI and show an error toast
+//         toast.error("Status update failed. Reverting.");
+//         grid.beginUpdate();
+//         grid.cellValue(rowIndex, "isActive", categoryToToggle.isActive);
+//         grid.endUpdate();
+//       }
+//     },
+//     [reloadGrid]
+//   );
+
+//   const createCategory = useCallback(async (payload) => {
+//     setSubmitting(true);
+//     try {
+//       await createCategoryApi(payload);
+//       reloadGrid();
+//       toast.success("Category created successfully");
+//       return true;
+//     } catch (err) {
+//       toast.error(err?.response?.data?.message || "Failed to create category");
+//       return false;
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   }, [reloadGrid]);
+
+//   const updateCategory = useCallback(async (id, payload) => {
+//     setSubmitting(true);
+//     try {
+//       await updateCategoryApi(id, payload);
+//       reloadGrid();
+//       toast.success("Category updated successfully");
+//       return true;
+//     } catch (err) {
+//       toast.error(err?.response?.data?.message || "Failed to update category");
+//       return false;
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   }, [reloadGrid]);
+
+//   const deleteCategory = useCallback(async (id) => {
+//     setSubmitting(true);
+//     try {
+//       await deleteCategoryApi(id);
+//       reloadGrid();
+//       toast.success("Category deleted successfully");
+//       return true;
+//     } catch (err) {
+//       toast.error(err?.response?.data?.message || "Delete failed");
+//       return false;
+//     } finally {
+//       setSubmitting(false);
+//     }
+//   }, [reloadGrid]);
+
+//   return {
+//     gridRef,
+//     submitting,
+//     createCategory,
+//     updateCategory,
+//     deleteCategory,
+//     toggleCategoryStatus,
+//   };
+// }
 
 
 // import { useState, useCallback, useRef } from "react";

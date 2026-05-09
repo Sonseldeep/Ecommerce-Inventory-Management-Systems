@@ -55,48 +55,69 @@
 //   );
 // }
 
+import "./StatusToggle.css";
+
 export default function StatusToggle({ isActive, onToggle }) {
-  const switchStyle = {
-    position: "relative",
-    width: "40px",
-    height: "22px",
-    borderRadius: "11px",
-    background: isActive ? "#16a34a" : "#d1d5db",
-    transition: "background-color 0.2s ease",
-  };
-
-  const knobStyle = {
-    position: "absolute",
-    top: "2px",
-    width: "18px",
-    height: "18px",
-    borderRadius: "50%",
-    background: "#fff",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-    transition: "transform 0.2s ease",
-    transform: isActive ? "translateX(18px)" : "translateX(2px)",
-  };
-
   return (
     <button
       type="button"
+      className="status-toggle-btn"
       onClick={onToggle}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        cursor: "pointer",
-        border: "none",
-        background: "transparent",
-        padding: 0,
-      }}
+      aria-label={isActive ? "Deactivate" : "Activate"}
     >
-      <div style={switchStyle}>
-        <div style={knobStyle} />
+      <div className={`toggle-track ${isActive ? "toggle-track--active" : "toggle-track--inactive"}`}>
+        <div className={`toggle-knob ${isActive ? "toggle-knob--active" : "toggle-knob--inactive"}`} />
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: isActive ? "#166534" : "#6b7280" }}>
+      <span className={`toggle-label ${isActive ? "toggle-label--active" : "toggle-label--inactive"}`}>
         {isActive ? "Active" : "Inactive"}
       </span>
     </button>
   );
 }
+// aaja ko 
+
+// export default function StatusToggle({ isActive, onToggle }) {
+//   const switchStyle = {
+//     position: "relative",
+//     width: "40px",
+//     height: "22px",
+//     borderRadius: "11px",
+//     background: isActive ? "#16a34a" : "#d1d5db",
+//     transition: "background-color 0.2s ease",
+//   };
+
+//   const knobStyle = {
+//     position: "absolute",
+//     top: "2px",
+//     width: "18px",
+//     height: "18px",
+//     borderRadius: "50%",
+//     background: "#fff",
+//     boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+//     transition: "transform 0.2s ease",
+//     transform: isActive ? "translateX(18px)" : "translateX(2px)",
+//   };
+
+//   return (
+//     <button
+//       type="button"
+//       onClick={onToggle}
+//       style={{
+//         display: "flex",
+//         alignItems: "center",
+//         gap: 8,
+//         cursor: "pointer",
+//         border: "none",
+//         background: "transparent",
+//         padding: 0,
+//       }}
+//     >
+//       <div style={switchStyle}>
+//         <div style={knobStyle} />
+//       </div>
+//       <span style={{ fontSize: 12, fontWeight: 600, color: isActive ? "#166534" : "#6b7280" }}>
+//         {isActive ? "Active" : "Inactive"}
+//       </span>
+//     </button>
+//   );
+// }
