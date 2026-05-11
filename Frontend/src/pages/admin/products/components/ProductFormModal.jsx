@@ -29,9 +29,7 @@ function CategorySelect({ categories, value, onChange, isEdit }) {
             {selectedCategory.name} (Inactive)
           </option>
         </select>
-        <p className="pf-helper-text pf-helper-text--warning">
-          Category is inactive. Cannot change category assignment.
-        </p>
+        
       </>
     );
   }
@@ -59,7 +57,7 @@ function CategorySelect({ categories, value, onChange, isEdit }) {
       </select>
       {noActive && (
         <p className="pf-helper-text pf-helper-text--error">
-           No active categories available. Contact admin.
+           No active categories available
         </p>
       )}
     </>
@@ -75,7 +73,6 @@ function InactiveCategoryWarning({ categories, categoryId }) {
     <div className="pf-warning-box">
   
       <div>
-        <p className="pf-warning-title">Inactive Category</p>
         <p className="pf-warning-text">
           This product is assigned to an inactive category:{" "}
           <strong>{selected.name}</strong>.
