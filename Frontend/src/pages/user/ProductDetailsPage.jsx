@@ -3,11 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getProductByIdApi } from "../../api/productApi";
 import { addToCartApi } from "../../api/cartApi";
+import { getCategoriesApi } from "../../api/categoryApi";
 import { useCart } from "../../context/CartContext";
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [img, setImg] = useState("");
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,15 @@ export default function ProductDetailsPage() {
   useEffect(() => {
     (async () => {
       try {
+        // Load categories
+        const catRes = await getCategoriesApi({
+          pageNumber: 1,
+          pageSize: 100,
+          sortBy: "name",
+          sortOrder: "asc",
+        });
+        setCategories(catRes.data?.data?.items || []);
+
         const res = await getProductByIdApi(id);
         const p = res.data?.data;
         setProduct(p || null);
@@ -41,6 +52,12 @@ export default function ProductDetailsPage() {
       return;
     }
 
+    const productCategory = categories.find(c => c.id === product.categoryId);
+    if (productCategory?.isActive === false) {
+      toast.error(`Cannot add '${product.name}' to cart. This product's category ('${product.categoryName || productCategory?.name || 'Unknown'}') is temporarily unavailable.`);
+      return;
+    }
+
     try {
       await addToCartApi({ productId: id, quantity: qty });
       await refreshCartCount();
@@ -53,6 +70,9 @@ export default function ProductDetailsPage() {
 
   if (loading) return <div className="p-6 text-center">Loading product...</div>;
   if (!product) return <div className="p-6 text-center">Product not found</div>;
+
+  const productCategory = categories.find(c => c.id === product.categoryId);
+  const isCategoryActive = productCategory?.isActive !== false;
 
   return (
     <div className="p-6 grid lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
@@ -101,6 +121,11 @@ export default function ProductDetailsPage() {
               ? `In Stock: ${product.quantityInStock}`
               : "Out of Stock"}
           </p>
+          {!isCategoryActive && (
+            <p className="text-sm mt-1 font-medium text-red-500">
+               This product's category is temporarily unavailable
+            </p>
+          )}
 
           {/* Quantity Selector */}
           <div className="mt-6 flex items-center gap-4">
@@ -109,7 +134,7 @@ export default function ProductDetailsPage() {
               <button
                 className="border px-3 py-1 rounded bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                disabled={qty <= 1 || product.quantityInStock <= 0}
+                disabled={qty <= 1 || product.quantityInStock <= 0 || !isCategoryActive}
               >
                 -
               </button>
@@ -119,7 +144,7 @@ export default function ProductDetailsPage() {
               <button
                 className="border px-3 py-1 rounded bg-gray-50 hover:bg-gray-100 disabled:opacity-40"
                 onClick={() => setQty((q) => q + 1)}
-                disabled={qty >= product.quantityInStock}
+                disabled={qty >= product.quantityInStock || !isCategoryActive}
               >
                 +
               </button>
@@ -130,10 +155,14 @@ export default function ProductDetailsPage() {
         {/* Action Button */}
         <button
           onClick={add}
-          disabled={product.quantityInStock <= 0}
+          disabled={product.quantityInStock <= 0 || !isCategoryActive}
           className="mt-8 w-full md:w-max bg-black text-white px-10 py-3 rounded-lg font-semibold transition-transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
         >
-          {product.quantityInStock <= 0 ? "Sold Out" : "Add to Cart"}
+          {!isCategoryActive
+            ? "Unavailable"
+            : product.quantityInStock <= 0
+            ? "Sold Out"
+            : "Add to Cart"}
         </button>
       </div>
     </div>

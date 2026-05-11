@@ -102,12 +102,25 @@ export default function ProductsPage() {
   ]);
 
   const addToCart = async (productId) => {
+    // Find the product to check category status
+    const product = items.find(p => p.id === productId);
+    if (!product) {
+      toast.error("Product not found");
+      return;
+    }
+
+    const productCategory = categories.find(c => c.id === product.categoryId);
+    if (productCategory?.isActive === false) {
+      toast.error(`Cannot add '${product.name}' to cart. This product's category ('${product.categoryName}') is temporarily unavailable.`);
+      return;
+    }
+
     try {
       await addToCartApi({ productId, quantity: 1 });
       await refreshCartCount();
       toast.success("Added to cart");
-    } catch {
-      toast.error("Failed to add to cart");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to add to cart");
     }
   };
 
@@ -250,6 +263,8 @@ export default function ProductsPage() {
             const finalPrice = hasDiscount
               ? p.price - p.discountPrice
               : p.price;
+            const productCategory = categories.find(c => c.id === p.categoryId);
+            const isCategoryActive = productCategory?.isActive !== false;
 
             return (
               <div key={p.id} className="bg-white rounded-2xl shadow p-4">
@@ -269,6 +284,11 @@ export default function ProductsPage() {
                 <p className="text-xs text-gray-500">
                   Stock: {p.quantityInStock}
                 </p>
+                {!isCategoryActive && (
+                  <p className="text-xs font-bold text-red-500 mt-1">
+                    Limited Stock
+                  </p>
+                )}
 
                 <div className="mt-2 flex justify-between items-center">
                   <div>
@@ -284,9 +304,14 @@ export default function ProductsPage() {
 
                   <button
                     onClick={() => addToCart(p.id)}
-                    className="bg-black text-white px-3 py-1 rounded-lg"
+                    disabled={!isCategoryActive}
+                    className={`px-3 py-1 rounded-lg ${
+                      isCategoryActive
+                        ? "bg-black text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
                   >
-                    Add
+                    {isCategoryActive ? "Add" : "Unavailable"}
                   </button>
                 </div>
               </div>

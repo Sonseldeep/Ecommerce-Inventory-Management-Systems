@@ -51,155 +51,366 @@ public class OrderService : IOrderService
         _realtime = realtime;
         _checkoutValidator = checkoutValidator;
     }
+   public async Task<OrderResponseDto> CheckoutAsync(CheckoutRequestDto request, CancellationToken ct = default)
+{
+    await _checkoutValidator.ValidateAndThrowAsync(request, ct);
+    var userId = _currentUser.GetUserId();
 
-    public async Task<OrderResponseDto> CheckoutAsync(CheckoutRequestDto request, CancellationToken ct = default)
+    var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);
+    if (cart is null || cart.Items.All(x => x.IsDeleted))
     {
-        await _checkoutValidator.ValidateAndThrowAsync(request, ct);
-        var userId = _currentUser.GetUserId();
+        throw new BadRequestException("Cart is empty.");
+    }
+       
+    var address = await _addresses.GetByIdAsync(request.AddressId, ct);
+    if (address is null || address.UserId != userId)
+    {
+        throw new BadRequestException("Invalid address.");
+    }
 
-        var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);
-        if (cart is null || cart.Items.All(x => x.IsDeleted))
+    var activeItems = cart.Items.Where(x => !x.IsDeleted).ToList();
+
+    // ✅ VALIDATION: All products must be from ACTIVE categories
+    var invalidItems = new List<string>();
+
+    foreach (var item in activeItems)
+    {
+        // Use GetByIdWithDetailsAsync to load Category
+        var product = await _products.GetByIdWithDetailsAsync(item.ProductId, ct)
+            ?? throw new NotFoundException("Product not found.");
+
+        _logger.LogInformation(
+            "🔍 [CHECKOUT] Validating product {ProductName}, CategoryId: {CategoryId}, Category is null: {IsCategoryNull}, IsActive: {IsActive}",
+            product.Name,
+            product.CategoryId,
+            product.Category == null,
+            product.Category?.IsActive ?? false);
+
+        // Check if category exists and is active
+        if (product.Category == null)
         {
-            throw new BadRequestException("Cart is empty.");
-
-        }
-           
-        var address = await _addresses.GetByIdAsync(request.AddressId, ct);
-        if (address is null || address.UserId != userId)
-        {
-            throw new BadRequestException("Invalid address.");
-        }
-
-        var activeItems = cart.Items.Where(x => !x.IsDeleted).ToList();
-
-        var subtotal = 0m;
-        var pricingSnapshot = new List<(Guid ProductId, string Name, string Sku, int Qty, decimal UnitPrice)>();
-
-        foreach (var item in activeItems)
-        {
-            var product = await _products.GetByIdAsync(item.ProductId, ct)
-                ?? throw new NotFoundException("Product not found.");
-
-            if (!product.IsActive)
-            {
-                throw new BadRequestException($"Product '{product.Name}' is inactive.");
-            }
-
-            if (product.QuantityInStock < item.Quantity)
-            {
-                throw new BadRequestException($"Insufficient stock for '{product.Name}'.");
-            }
-                
-
-            var finalUnitPrice = ResolveSellingPrice(product.Price, product.DiscountPrice);
-            pricingSnapshot.Add((product.Id, product.Name, product.SKU, item.Quantity, finalUnitPrice));
-            subtotal += finalUnitPrice * item.Quantity;
+            invalidItems.Add($"{product.Name} (No category assigned)");
+            continue;
         }
 
-        const decimal discount = 0m;
-        const decimal shipping = 0m;
-        var total = subtotal - discount + shipping;
-
-        var order = new Order
+        if (!product.Category.IsActive)
         {
-            OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
-            UserId = userId,
-            AddressId = address.Id,
+            _logger.LogWarning(
+                "⛔ [CHECKOUT] BLOCKED: Product from inactive category - Product: {ProductName}, Category: {CategoryName}",
+                product.Name,
+                product.Category.Name);
 
-            ShippingFullName    = address.FullName,
-            ShippingPhoneNumber = address.PhoneNumber,
-            ShippingLine1       = address.Line1,
-            ShippingLine2       = address.Line2,
-            ShippingCity        = address.City,
-            ShippingState       = address.State,
-            ShippingPostalCode  = address.PostalCode,
-            ShippingCountry     = address.Country,
+            invalidItems.Add($"{product.Name} (Category: {product.Category.Name} is temporarily unavailable)");
+        }
+    }
 
-            Subtotal       = subtotal,
-            DiscountAmount = discount,
-            ShippingFee    = shipping,
-            TotalAmount    = total,
+    if (invalidItems.Any())
+    {
+        var errorMessage = "Cannot checkout. The following items are unavailable:\n" + 
+            string.Join("\n", invalidItems) + 
+            "\nPlease remove them from your cart.";
+        
+        _logger.LogWarning("❌ [CHECKOUT] REJECTED: {ErrorMessage}", errorMessage);
+        throw new BadRequestException(errorMessage);
+    }
 
-            PaymentMethod = request.PaymentMethod,
-            PaymentStatus = PaymentStatus.Pending,
-            OrderStatus   = OrderStatus.Pending
-        };
+    var subtotal = 0m;
+    var pricingSnapshot = new List<(Guid ProductId, string Name, string Sku, int Qty, decimal UnitPrice)>();
 
-        await _orders.AddAsync(order, ct);
+    foreach (var item in activeItems)
+    {
+        var product = await _products.GetByIdAsync(item.ProductId, ct)
+            ?? throw new NotFoundException("Product not found.");
 
-        foreach (var line in pricingSnapshot)
+        if (!product.IsActive)
         {
-            var product = await _products.GetByIdAsync(line.ProductId, ct)
-                ?? throw new NotFoundException("Product not found.");
+            throw new BadRequestException($"Product '{product.Name}' is inactive.");
+        }
 
-            //Deduct stock 
-            product.QuantityInStock -= line.Qty;
-            _products.Update(product);
-            
-           // Broadcast the stock change to all connected admin clients via SignalR
-            await _realtime.ProductStockUpdatedAsync(
+        if (product.QuantityInStock < item.Quantity)
+        {
+            throw new BadRequestException($"Insufficient stock for '{product.Name}'.");
+        }
+
+        var finalUnitPrice = ResolveSellingPrice(product.Price, product.DiscountPrice);
+        pricingSnapshot.Add((product.Id, product.Name, product.SKU, item.Quantity, finalUnitPrice));
+        subtotal += finalUnitPrice * item.Quantity;
+    }
+
+    const decimal discount = 0m;
+    const decimal shipping = 0m;
+    var total = subtotal - discount + shipping;
+
+    var order = new Order
+    {
+        OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
+        UserId = userId,
+        AddressId = address.Id,
+
+        ShippingFullName    = address.FullName,
+        ShippingPhoneNumber = address.PhoneNumber,
+        ShippingLine1       = address.Line1,
+        ShippingLine2       = address.Line2,
+        ShippingCity        = address.City,
+        ShippingState       = address.State,
+        ShippingPostalCode  = address.PostalCode,
+        ShippingCountry     = address.Country,
+
+        Subtotal       = subtotal,
+        DiscountAmount = discount,
+        ShippingFee    = shipping,
+        TotalAmount    = total,
+
+        PaymentMethod = request.PaymentMethod,
+        PaymentStatus = PaymentStatus.Pending,
+        OrderStatus   = OrderStatus.Pending
+    };
+
+    await _orders.AddAsync(order, ct);
+
+    foreach (var line in pricingSnapshot)
+    {
+        var product = await _products.GetByIdAsync(line.ProductId, ct)
+            ?? throw new NotFoundException("Product not found.");
+
+        product.QuantityInStock -= line.Qty;
+        _products.Update(product);
+        
+        await _realtime.ProductStockUpdatedAsync(
+            product.Id,
+            product.Name,
+            product.QuantityInStock,
+            ct
+        );
+
+        var reorderLevel = product.ReorderLevel > 0 ? product.ReorderLevel : 5;
+        if (product.QuantityInStock <= reorderLevel)
+        {
+            await _realtime.LowStockAsync(
                 product.Id,
                 product.Name,
                 product.QuantityInStock,
+                reorderLevel,
                 ct
             );
-            
-
-            // Low stock alert after deduction 
-            var reorderLevel = product.ReorderLevel > 0 ? product.ReorderLevel : 5;
-            if (product.QuantityInStock <= reorderLevel)
-            {
-                await _realtime.LowStockAsync(
-                    product.Id,
-                    product.Name,
-                    product.QuantityInStock,
-                    reorderLevel,
-                    ct
-                );
-            }
-
-            var orderItem = new OrderItem
-            {
-                OrderId              = order.Id,
-                ProductId            = line.ProductId,
-                ProductNameSnapshot  = line.Name,
-                ProductSkuSnapshot   = line.Sku,
-                Quantity             = line.Qty,
-                UnitPrice            = line.UnitPrice,
-                LineTotal            = line.UnitPrice * line.Qty
-            };
-
-            await _orderItems.AddAsync(orderItem, ct);
         }
 
-        foreach (var cartItem in activeItems)
+        var orderItem = new OrderItem
         {
-            _cartItems.Remove(cartItem);
-        }
-        
-        await _uow.SaveChangesAsync(ct);
+            OrderId              = order.Id,
+            ProductId            = line.ProductId,
+            ProductNameSnapshot  = line.Name,
+            ProductSkuSnapshot   = line.Sku,
+            Quantity             = line.Qty,
+            UnitPrice            = line.UnitPrice,
+            LineTotal            = line.UnitPrice * line.Qty
+        };
 
-        var created = await _orders.GetByIdWithItemsAsync(order.Id, ct)
-            ?? throw new NotFoundException("Order not found after creation.");
-
-        // await _realtime.OrderPlacedAsync(created.ToDto(), ct);
-        await _realtime.OrderPlacedAsync(new OrderCreatedNotificationDto
-        {
-            OrderId = created.Id,
-            OrderNumber = created.OrderNumber,
-            UserName = created.User?.FullName ?? "Unknown",
-            Email = created.User?.Email ?? "Unknown",
-            TotalAmount = created.TotalAmount,
-            CreatedAtUtc = created.CreatedAtUtc
-        }, ct);
-     
-
-        _logger.LogInformation(
-            "Order created. OrderNumber: {OrderNumber}, UserId: {UserId}",
-            created.OrderNumber, userId);
-
-        return created.ToDto();
+        await _orderItems.AddAsync(orderItem, ct);
     }
+
+    foreach (var cartItem in activeItems)
+    {
+        _cartItems.Remove(cartItem);
+    }
+    
+    await _uow.SaveChangesAsync(ct);
+
+    var created = await _orders.GetByIdWithItemsAsync(order.Id, ct)
+        ?? throw new NotFoundException("Order not found after creation.");
+
+    await _realtime.OrderPlacedAsync(new OrderCreatedNotificationDto
+    {
+        OrderId = created.Id,
+        OrderNumber = created.OrderNumber,
+        UserName = created.User?.FullName ?? "Unknown",
+        Email = created.User?.Email ?? "Unknown",
+        TotalAmount = created.TotalAmount,
+        CreatedAtUtc = created.CreatedAtUtc
+    }, ct);
+
+    _logger.LogInformation(
+        "✅ [CHECKOUT] Order created. OrderNumber: {OrderNumber}, UserId: {UserId}",
+        created.OrderNumber, userId);
+
+    return created.ToDto();
+}
+
+    // public async Task<OrderResponseDto> CheckoutAsync(CheckoutRequestDto request, CancellationToken ct = default)
+    // {
+    //     await _checkoutValidator.ValidateAndThrowAsync(request, ct);
+    //     var userId = _currentUser.GetUserId();
+    //
+    //     var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);
+    //     if (cart is null || cart.Items.All(x => x.IsDeleted))
+    //     {
+    //         throw new BadRequestException("Cart is empty.");
+    //
+    //     }
+    //        
+    //     var address = await _addresses.GetByIdAsync(request.AddressId, ct);
+    //     if (address is null || address.UserId != userId)
+    //     {
+    //         throw new BadRequestException("Invalid address.");
+    //     }
+    //
+    //     var activeItems = cart.Items.Where(x => !x.IsDeleted).ToList();
+    //
+    //     
+    //     // ✅ NEW: Validate all products are from active categories
+    //     var invalidItems = new List<string>();
+    //
+    //     foreach (var item in activeItems)
+    //     {
+    //         var product = await _products.GetByIdWithDetailsAsync(item.ProductId, ct)
+    //                       ?? throw new NotFoundException("Product not found.");
+    //         // var product = await _products.GetByIdAsync(item.ProductId, ct)
+    //         //               ?? throw new NotFoundException("Product not found.");
+    //     
+    //         if (product.Category is not null && !product.Category.IsActive)
+    //         {
+    //             invalidItems.Add($"{product.Name} (Category: {product.Category.Name} is temporarily unavailable)");
+    //         }
+    //     }
+    //
+    //     if (invalidItems.Any())
+    //     {
+    //         var errorMessage = "Cannot checkout. The following items are unavailable:\n" + 
+    //                            string.Join("\n", invalidItems) + 
+    //                            "\nPlease remove them from your cart.";
+    //         throw new BadRequestException(errorMessage);
+    //     }
+    //
+    //     var subtotal = 0m;
+    //
+    //     
+    //     var pricingSnapshot = new List<(Guid ProductId, string Name, string Sku, int Qty, decimal UnitPrice)>();
+    //
+    //     foreach (var item in activeItems)
+    //     {
+    //         var product = await _products.GetByIdAsync(item.ProductId, ct)
+    //             ?? throw new NotFoundException("Product not found.");
+    //
+    //         if (!product.IsActive)
+    //         {
+    //             throw new BadRequestException($"Product '{product.Name}' is inactive.");
+    //         }
+    //
+    //         if (product.QuantityInStock < item.Quantity)
+    //         {
+    //             throw new BadRequestException($"Insufficient stock for '{product.Name}'.");
+    //         }
+    //             
+    //
+    //         var finalUnitPrice = ResolveSellingPrice(product.Price, product.DiscountPrice);
+    //         pricingSnapshot.Add((product.Id, product.Name, product.SKU, item.Quantity, finalUnitPrice));
+    //         subtotal += finalUnitPrice * item.Quantity;
+    //     }
+    //
+    //     const decimal discount = 0m;
+    //     const decimal shipping = 0m;
+    //     var total = subtotal - discount + shipping;
+    //
+    //     var order = new Order
+    //     {
+    //         OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
+    //         UserId = userId,
+    //         AddressId = address.Id,
+    //
+    //         ShippingFullName    = address.FullName,
+    //         ShippingPhoneNumber = address.PhoneNumber,
+    //         ShippingLine1       = address.Line1,
+    //         ShippingLine2       = address.Line2,
+    //         ShippingCity        = address.City,
+    //         ShippingState       = address.State,
+    //         ShippingPostalCode  = address.PostalCode,
+    //         ShippingCountry     = address.Country,
+    //
+    //         Subtotal       = subtotal,
+    //         DiscountAmount = discount,
+    //         ShippingFee    = shipping,
+    //         TotalAmount    = total,
+    //
+    //         PaymentMethod = request.PaymentMethod,
+    //         PaymentStatus = PaymentStatus.Pending,
+    //         OrderStatus   = OrderStatus.Pending
+    //     };
+    //
+    //     await _orders.AddAsync(order, ct);
+    //
+    //     foreach (var line in pricingSnapshot)
+    //     {
+    //         var product = await _products.GetByIdAsync(line.ProductId, ct)
+    //             ?? throw new NotFoundException("Product not found.");
+    //
+    //         //Deduct stock 
+    //         product.QuantityInStock -= line.Qty;
+    //         _products.Update(product);
+    //         
+    //        // Broadcast the stock change to all connected admin clients via SignalR
+    //         await _realtime.ProductStockUpdatedAsync(
+    //             product.Id,
+    //             product.Name,
+    //             product.QuantityInStock,
+    //             ct
+    //         );
+    //         
+    //
+    //         // Low stock alert after deduction 
+    //         var reorderLevel = product.ReorderLevel > 0 ? product.ReorderLevel : 5;
+    //         if (product.QuantityInStock <= reorderLevel)
+    //         {
+    //             await _realtime.LowStockAsync(
+    //                 product.Id,
+    //                 product.Name,
+    //                 product.QuantityInStock,
+    //                 reorderLevel,
+    //                 ct
+    //             );
+    //         }
+    //
+    //         var orderItem = new OrderItem
+    //         {
+    //             OrderId              = order.Id,
+    //             ProductId            = line.ProductId,
+    //             ProductNameSnapshot  = line.Name,
+    //             ProductSkuSnapshot   = line.Sku,
+    //             Quantity             = line.Qty,
+    //             UnitPrice            = line.UnitPrice,
+    //             LineTotal            = line.UnitPrice * line.Qty
+    //         };
+    //
+    //         await _orderItems.AddAsync(orderItem, ct);
+    //     }
+    //
+    //     foreach (var cartItem in activeItems)
+    //     {
+    //         _cartItems.Remove(cartItem);
+    //     }
+    //     
+    //     await _uow.SaveChangesAsync(ct);
+    //
+    //     var created = await _orders.GetByIdWithItemsAsync(order.Id, ct)
+    //         ?? throw new NotFoundException("Order not found after creation.");
+    //
+    //     // await _realtime.OrderPlacedAsync(created.ToDto(), ct);
+    //     await _realtime.OrderPlacedAsync(new OrderCreatedNotificationDto
+    //     {
+    //         OrderId = created.Id,
+    //         OrderNumber = created.OrderNumber,
+    //         UserName = created.User?.FullName ?? "Unknown",
+    //         Email = created.User?.Email ?? "Unknown",
+    //         TotalAmount = created.TotalAmount,
+    //         CreatedAtUtc = created.CreatedAtUtc
+    //     }, ct);
+    //  
+    //
+    //     _logger.LogInformation(
+    //         "Order created. OrderNumber: {OrderNumber}, UserId: {UserId}",
+    //         created.OrderNumber, userId);
+    //
+    //     return created.ToDto();
+    // }
 
     public async Task<PagedResult<OrderResponseDto>> GetMyOrdersAsync(OrderQueryParamsDto query, CancellationToken ct = default)
     {
