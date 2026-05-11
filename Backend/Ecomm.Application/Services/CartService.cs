@@ -1,4 +1,5 @@
-﻿using Ecomm.Application.Common;
+﻿
+using Ecomm.Application.Common;
 using Ecomm.Application.DTOs.Cart;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
@@ -52,22 +53,54 @@ public class CartService : ICartService
 
     public async Task<CartResponseDto> AddItemAsync(AddToCartRequestDto request, CancellationToken ct = default)
     {
-        await _addValidator.ValidateAsync(request,ct);
+        await _addValidator.ValidateAsync(request, ct);
         
         var userId = _currentUser.GetUserId();
+        
+        //  FIXED: Use GetByIdWithDetailsAsync to load Category
+        var product = await _products.GetByIdWithDetailsAsync(request.ProductId, ct);
 
-        var product = await _products.GetByIdAsync(request.ProductId, ct);
-        if (product is null || !product.IsActive)
+        if (product is null)
         {
             throw new NotFoundException("Product not found.");
         }
-            
+
+        if (!product.IsActive)
+        {
+            throw new BadRequestException("Product is inactive.");
+        }
+
+        //  DEBUG: Log category info
+        _logger.LogInformation(
+            "Cart Add: Product {ProductName}, Category is null: {IsCategoryNull}, Category IsActive: {IsActive}",
+            product.Name,
+            false,
+            product.Category?.IsActive ?? false);
+
+        // CRITICAL CHECK: Validate category is active
+        if (product.Category == null)
+        {
+            _logger.LogWarning(
+                "Product {ProductId} has no category assigned. This should not happen.",
+                product.Id);
+            throw new BadRequestException("Product has no category assigned.");
+        }
+
+        if (!product.Category.IsActive)
+        {
+            _logger.LogInformation(
+                "Rejected add to cart: Product '{ProductName}' from inactive category '{CategoryName}'",
+                product.Name,
+                product.Category.Name);
+
+            throw new BadRequestException(
+                $"Cannot add '{product.Name}' to cart. This product's category ('{product.Category.Name}') is temporarily unavailable.");
+        }
 
         if (product.QuantityInStock < request.Quantity)
         {
             throw new BadRequestException("Insufficient stock.");
         }
-            
 
         var cart = await GetOrCreateCart(userId, ct);
 
@@ -98,18 +131,24 @@ public class CartService : ICartService
 
         await _uow.SaveChangesAsync(ct);
 
-        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) ?? throw new NotFoundException("Cart not found.");
-        _logger.LogInformation("Item added to cart. UserId: {UserId}, ProductId: {ProductId}", userId, request.ProductId);
+        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) 
+            ?? throw new NotFoundException("Cart not found.");
+        
+        _logger.LogInformation(
+            "Item added to cart. UserId: {UserId}, ProductId: {ProductId}", 
+            userId, 
+            request.ProductId);
 
         return updated.ToDto();
     }
 
     public async Task<CartResponseDto> UpdateItemAsync(Guid cartItemId, UpdateCartItemRequestDto request, CancellationToken ct = default)
     {
-        await _updateValidator.ValidateAndThrowAsync(request,ct);
+        await _updateValidator.ValidateAndThrowAsync(request, ct);
         
         var userId = _currentUser.GetUserId();
-        var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct) ?? throw new NotFoundException("Cart not found.");
+        var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct) 
+            ?? throw new NotFoundException("Cart not found.");
 
         var item = cart.Items.FirstOrDefault(x => x.Id == cartItemId && !x.IsDeleted)
                    ?? throw new NotFoundException("Cart item not found.");
@@ -118,14 +157,14 @@ public class CartService : ICartService
         {
             throw new BadRequestException("Quantity must be greater than zero.");
         }
-            
 
-        var product = await _products.GetByIdAsync(item.ProductId, ct) ?? throw new NotFoundException("Product not found.");
+        var product = await _products.GetByIdAsync(item.ProductId, ct) 
+            ?? throw new NotFoundException("Product not found.");
+            
         if (product.QuantityInStock < request.Quantity)
         {
             throw new BadRequestException("Insufficient stock.");
         }
-           
 
         item.Quantity = request.Quantity;
         item.UnitPrice = ResolveSellingPrice(product.Price, product.DiscountPrice);
@@ -133,14 +172,16 @@ public class CartService : ICartService
 
         await _uow.SaveChangesAsync(ct);
 
-        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) ?? throw new NotFoundException("Cart not found.");
+        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) 
+            ?? throw new NotFoundException("Cart not found.");
         return updated.ToDto();
     }
 
     public async Task<CartResponseDto> RemoveItemAsync(Guid cartItemId, CancellationToken ct = default)
     {
         var userId = _currentUser.GetUserId();
-        var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct) ?? throw new NotFoundException("Cart not found.");
+        var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct) 
+            ?? throw new NotFoundException("Cart not found.");
 
         var item = cart.Items.FirstOrDefault(x => x.Id == cartItemId && !x.IsDeleted)
                    ?? throw new NotFoundException("Cart item not found.");
@@ -148,16 +189,19 @@ public class CartService : ICartService
         _cartItems.Remove(item);
         await _uow.SaveChangesAsync(ct);
 
-        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) ?? throw new NotFoundException("Cart not found.");
+        var updated = await _carts.GetByUserIdWithItemsAsync(userId, ct) 
+            ?? throw new NotFoundException("Cart not found.");
         return updated.ToDto();
     }
 
     private async Task<Cart> GetOrCreateCart(Guid userId, CancellationToken ct)
     {
-        var user = await _users.GetByIdAsync(userId, ct) ?? throw new UnauthorizedException("User not found.");
+        var user = await _users.GetByIdAsync(userId, ct) 
+            ?? throw new UnauthorizedException("User not found.");
 
         var cart = await _carts.GetByUserIdWithItemsAsync(userId, ct);
-        if (cart is not null) return cart;
+        if (cart is not null) 
+            return cart;
 
         cart = new Cart { UserId = user.Id };
         await _carts.AddAsync(cart, ct);
@@ -172,9 +216,7 @@ public class CartService : ICartService
         {
             return discountPrice.Value;
         }
-           
 
         return price;
     }
 }
-

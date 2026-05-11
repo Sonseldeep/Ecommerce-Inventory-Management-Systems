@@ -24,6 +24,8 @@ public static class ProductMapping
 
     public static ProductResponseDto ToDto(this Product product)
     {
+        var isCategoryActive = product.Category?.IsActive == true;
+        var categoryStatus = isCategoryActive ? "Active" : "Limited Availability";
         return new ProductResponseDto
         {
             Id = product.Id,
@@ -37,6 +39,8 @@ public static class ProductMapping
             IsActive = product.IsActive,
             CategoryId = product.CategoryId,
             CategoryName = product.Category?.Name ?? string.Empty,
+            IsCategoryActive = isCategoryActive,
+            CategoryStatus = categoryStatus,
             Images = product.Images
                 .Where(i => !i.IsDeleted)
                 .OrderBy(i => i.SortOrder)

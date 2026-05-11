@@ -15,5 +15,7 @@ public class ProductResponseDto
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
 
+    public bool IsCategoryActive { get; set; }
+    public string? CategoryStatus { get; set; }
     public List<ProductImageDto> Images { get; set; } = [];
 }
