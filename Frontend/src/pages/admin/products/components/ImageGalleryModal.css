@@ -1,0 +1,212 @@
+/* ── ImageGalleryModal ───────────────────────────────────────────── */
+
+.gallery-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gallery-container {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.gallery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.gallery-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.gallery-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+  padding: 0;
+}
+
+/* ── Upload Zone ──────────────────────────────────────────────────── */
+
+.gallery-upload-zone {
+  border: 1.5px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 16px 14px;
+  margin-bottom: 24px;
+  background: #f9fafb;
+}
+
+.gallery-upload-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.gallery-upload-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.gallery-upload-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.gallery-upload-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 6px 0 0;
+}
+
+/* ── State Messages ──────────────────────────────────────────────── */
+
+.gallery-state-msg {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.gallery-state-msg--empty {
+  color: #9ca3af;
+}
+
+/* ── Image Grid ──────────────────────────────────────────────────── */
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* ── Image Card ──────────────────────────────────────────────────── */
+
+.gallery-card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background-color: #f3f4f6;
+  aspect-ratio: 1;
+}
+
+.gallery-card--primary {
+  border: 3px solid #111;
+}
+
+.gallery-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Primary Badge ───────────────────────────────────────────────── */
+
+.gallery-primary-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #111;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ── Hover Overlay ───────────────────────────────────────────────── */
+
+.gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.gallery-card:hover .gallery-overlay {
+  opacity: 1;
+}
+
+/* ── Overlay Buttons ─────────────────────────────────────────────── */
+
+.gallery-overlay-btn {
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  display: block;
+  min-width: 80px;
+}
+
+.gallery-overlay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gallery-overlay-btn--replace  { background: #3b82f6; }
+.gallery-overlay-btn--primary  { background: #16a34a; }
+.gallery-overlay-btn--delete   { background: #dc2626; }
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+
+.gallery-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 6px;
+}
+
+.gallery-close-footer-btn {
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #374151;
+  transition: opacity 0.15s;
+}
+
+.gallery-close-footer-btn:hover {
+  opacity: 0.8;
+}

@@ -50,6 +50,9 @@ public class ProductService : IProductService
             throw new NotFoundException("Category not found.");
         }
 
+        if (!category.IsActive)
+        {
+            throw new BadRequestException($"Cannot add products to inactive category '{category.Name}'. Contact admin to activate this category.");        }
 
         if (await _products.ExistsBySkuAsync(request.SKU.Trim(), ct))
         {
@@ -121,19 +124,30 @@ public class ProductService : IProductService
     public async Task<ProductResponseDto> UpdateAsync(Guid id, UpdateProductRequestDto request, CancellationToken ct = default)
     {
         await _updateValidator.ValidateAndThrowAsync(request, ct);
-        
+
         var product = await _products.GetByIdWithDetailsAsync(id, ct);
         if (product is null)
         {
             throw new NotFoundException("Product not found.");
         }
 
-        var category = await _categories.GetByIdAsync(request.CategoryId, ct);
-        if (category is null)
+        // If changing category, check if new category is active
+        if (product.CategoryId != request.CategoryId)
         {
-            throw new NotFoundException("Category not found.");
+            var newCategory = await _categories.GetByIdAsync(request.CategoryId, ct);
+        
+            if (newCategory is null)
+            {
+                throw new NotFoundException("New category not found.");
+            }
 
+            //  Check if new category is active
+            if (!newCategory.IsActive)
+            {
+                throw new BadRequestException($"Cannot move product to inactive category '{newCategory.Name}'.");
+            }
         }
+
         product.Name = request.Name.Trim();
         product.Description = request.Description.Trim();
         product.Price = request.Price;
@@ -147,16 +161,10 @@ public class ProductService : IProductService
         await _uow.SaveChangesAsync(ct);
 
         var updated = await _products.GetByIdWithDetailsAsync(id, ct)
-                      ?? throw new NotFoundException("Product not found.");
-        
-        var response = updated.ToDto();
-        
-        // Trigger Real-time Notification
-        await _realtime.ProductUpdatedAsync(response, ct);
-       
+                      ?? throw new NotFoundException("Updated product not found.");
 
         _logger.LogInformation("Product updated: {ProductId}", id);
-        return response;
+        return updated.ToDto();
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)

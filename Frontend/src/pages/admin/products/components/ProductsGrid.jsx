@@ -1,85 +1,93 @@
+/* eslint-disable react-hooks/refs */
+/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable no-undef */
 /* eslint-disable react-hooks/immutability */
 
 
-// v4
 
-import { useState, useMemo } from "react";
+
+
+
+
+import { useState, useMemo, useCallback, useRef } from "react";
 import CustomStore from "devextreme/data/custom_store";
 import DataSource from "devextreme/data/data_source";
 import DataGrid, {
   Column,
-  ColumnChooser,
   Export,
   GroupPanel,
   Grouping,
-
   Item,
   Pager,
   Paging,
   SearchPanel,
-
-  Summary,
   Toolbar,
-  TotalItem,
 } from "devextreme-react/data-grid";
 
 import { getProductsApi } from "../../../../api/productApi";
 import { ALLOWED_PAGE_SIZES } from "../constant";
-import { handleGridExport } from "../utils/exportHelper";
+import { exportAllToXlsx } from "../utils/exportHelper";
+import ConfirmDialog from "./ConfirmDialog";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WHY THE DEBOUNCE IS NEEDED
-//
-// When the user changes the page-size dropdown (e.g. 10 → 20), DevExtreme
-// fires load() TWICE in quick succession:
-//
-//   Call 1 (stale):   { skip: 10, take: 10 }  → pageNumber 2, pageSize 10  ← wrong
-//   Call 2 (correct): { skip:  0, take: 20 }  → pageNumber 1, pageSize 20  ← right
-//
-// Without debouncing both calls hit your backend. The UI ends up correct
-// because call 2 wins, but call 1 is a wasted / misleading backend hit.
-//
-// The debounce (80 ms) collapses the two calls into one: the timer resets on
-// every call, so only the last set of loadOptions reaches getProductsApi.
-//
-// HOW THE PROMISE REUSE WORKS
-//
-// DevExtreme expects load() to return a Promise. Both call 1 and call 2
-// receive the SAME promise object. When the debounce timer fires it resolves
-// that shared promise with the data from call 2's (correct) loadOptions.
-// DevExtreme sees one resolved promise → one clean render.
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Inline styles for action buttons ─────────────────────────────
+// DevExtreme cell renderers run inside a shadow-like DOM context that
+// frequently ignores external stylesheet classes. Inline styles are
+// the only 100%-reliable approach for button styling inside DX cells.
+const BTN_BASE = {
+  padding: "4px 10px",
+  borderRadius: 6,
+  border: "none",
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: "pointer",
+  lineHeight: 1.4,
+};
+
+const BTN_EDIT = {
+  ...BTN_BASE,
+  background: "#f3f4f6",
+  color: "#374151",
+};
+
+const BTN_DELETE = {
+  ...BTN_BASE,
+  background: "#fee2e2",
+  color: "#dc2626",
+};
 
 export default function ProductsGrid({
   gridRef,
   categories,
   onEdit,
   onDelete,
+  onExportAll,
 }) {
-  // ── Delete confirmation state ─────────────────────────────────
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, productId: null });
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const getCategoryName = (row) =>
-    categories.find((c) => c.id === row.categoryId)?.name || "—";
+  // Holds the latest search term so the CustomStore load() can read it.
+  // Using a ref avoids recreating the dataSource when search changes.
+  const searchTermRef = useRef("");
 
+  const getCategoryName = useCallback(
+    (row) => categories.find((c) => c.id === row.categoryId)?.name ?? "—",
+    [categories]
+  );
+
+  // ── Debounced remote data source ──────────────────────────────
+  // The dataSource is created once. Search is forwarded to the API
+  // via searchTermRef so the closure stays stable.
   const dataSource = useMemo(() => {
-    // ── Debounce state (closure variables, live inside useMemo) ────────────
-    let debounceTimer   = null;
-    let currentPromise  = null;
-    let currentResolve  = null;
-    let currentReject   = null;
+    let debounceTimer  = null;
+    let currentPromise = null;
+    let currentResolve = null;
+    let currentReject  = null;
 
     return new DataSource({
       store: new CustomStore({
         key: "id",
-
         load: (latestOptions) => {
-          // Reset the timer — drop any pending stale call
           if (debounceTimer) clearTimeout(debounceTimer);
 
-          // Reuse the existing promise so all callers within the debounce
-          // window share one promise and get the same final result.
           if (!currentPromise) {
             currentPromise = new Promise((resolve, reject) => {
               currentResolve = resolve;
@@ -88,20 +96,19 @@ export default function ProductsGrid({
           }
 
           debounceTimer = setTimeout(async () => {
-            // Capture and clear shared state before the async call
-            // so a new page-change during the API call starts fresh.
-            const resolve = currentResolve;
-            const reject  = currentReject;
+            const resolve  = currentResolve;
+            const reject   = currentReject;
             debounceTimer  = null;
             currentPromise = null;
             currentResolve = null;
             currentReject  = null;
 
-            // latestOptions is captured from the LAST load() call before
-            // the timer fired — always the most up-to-date skip/take.
             const pageSize   = latestOptions.take || 10;
             const skip       = latestOptions.skip  || 0;
             const pageNumber = Math.floor(skip / pageSize) + 1;
+
+            // Read the latest search term from the ref
+            const search = searchTermRef.current?.trim() || undefined;
 
             try {
               const res  = await getProductsApi({
@@ -109,6 +116,9 @@ export default function ProductsGrid({
                 pageSize,
                 sortBy:    "name",
                 sortOrder: "asc",
+                // Pass search to backend — your API must support a
+                // `search` (or `keyword` / `q`) query param.
+                ...(search ? { search } : {}),
               });
               const data = res.data?.data;
               resolve({
@@ -118,27 +128,54 @@ export default function ProductsGrid({
             } catch (err) {
               reject(err);
             }
-          }, 80); // 80 ms is enough to collapse DevExtreme's rapid double-fire
+          }, 300); // 300 ms debounce for search typing
 
           return currentPromise;
         },
       }),
-
-      paginate:       true,
-      reshapeOnPush:  true,
+      paginate:      true,
+      reshapeOnPush: true,
     });
-  }, []); // created once — stable across renders
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Handle search panel input ─────────────────────────────────
+  // DevExtreme fires onOptionChanged when the search text changes.
+  const handleOptionChanged = useCallback(
+    (e) => {
+      if (e.fullName === "searchPanel.text") {
+        searchTermRef.current = e.value ?? "";
+        // Reset to page 1 and reload
+        dataSource.pageIndex(0);
+        dataSource.reload();
+      }
+    },
+    [dataSource]
+  );
+
+  // ── Export ────────────────────────────────────────────────────
+  const handleExporting = useCallback(
+    async (e) => {
+      e.cancel = true; // always cancel DX built-in (only sees current page)
+
+      const allProducts = await onExportAll();
+      if (!allProducts?.length) return;
+
+      if (e.format === "xlsx") {
+        await exportAllToXlsx(allProducts, categories);
+      }
+    },
+    [onExportAll, categories]
+  );
+
+  // ── Confirm delete ────────────────────────────────────────────
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteTarget) onDelete(deleteTarget);
+    setDeleteTarget(null);
+  }, [deleteTarget, onDelete]);
+
+  // ── Render ────────────────────────────────────────────────────
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: 16,
-        border: "1px solid #e5e7eb",
-        padding: 20,
-      }}
-    >
+    <div className="grid-wrapper">
       <DataGrid
         ref={gridRef}
         dataSource={dataSource}
@@ -150,79 +187,50 @@ export default function ProductsGrid({
         allowColumnReordering
         allowColumnResizing
         wordWrapEnabled={false}
-        onExporting={handleGridExport}
+        onExporting={handleExporting}
+        onOptionChanged={handleOptionChanged}
         style={{ fontSize: 13 }}
       >
-        {/* ── Toolbar ──────────────────────────────────────────────── */}
+        {/* Toolbar — column chooser removed */}
         <Toolbar>
           <Item name="groupPanel" />
-          {/* <Item location="before">
-            <button
-              onClick={onAddNew}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "none",
-                background: "#111",
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              + Add Product
-            </button>
-          </Item> */}
           <Item name="searchPanel" />
-          <Item name="columnChooserButton" showText="inMenu" />
           <Item name="exportButton" />
         </Toolbar>
 
         <SearchPanel visible width={220} placeholder="Search products…" />
-        {/* <FilterRow visible />
-        <HeaderFilter visible /> */}
         <GroupPanel visible />
         <Grouping autoExpandAll={false} />
-        <ColumnChooser enabled mode="select" />
-        {/* <Selection mode="multiple" showCheckBoxesMode="always" /> */}
 
-        {/* ── Pagination ───────────────────────────────────────────── */}
+        {/* Pagination */}
         <Paging defaultPageSize={10} />
         <Pager
-          visible={true}
+          visible
           displayMode="full"
-          showPageSizeSelector={true}
+          showPageSizeSelector
           allowedPageSizes={ALLOWED_PAGE_SIZES}
-          showInfo={true}
-          showNavigationButtons={true}
-          // infoText="Page {0} of {1} ({2} products)"
+          showInfo
+          showNavigationButtons
         />
 
-        {/* ── Export ───────────────────────────────────────────────── */}
+        {/* Export */}
         <Export
           enabled
-          formats={["xlsx", "pdf"]}
-          allowExportSelectedData
+          formats={["xlsx"]}
           texts={{
-            exportAll:          "Export all",
-            exportSelectedRows: "Export selected",
-            exportTo:           "Export",
+            exportAll: "Export all",
+            exportTo:  "Export",
           }}
         />
 
-        {/* ── Columns ──────────────────────────────────────────────── */}
-        <Column dataField="name"  caption="Product Name" minWidth={180} />
-        <Column dataField="sku"   caption="SKU"          width={130} />
+        {/* Columns */}
+        <Column dataField="name" caption="Product Name" minWidth={180} />
+        <Column dataField="sku"  caption="SKU"          width={130} />
 
         <Column
           caption="Category"
           width={150}
           calculateCellValue={getCategoryName}
-          calculateFilterExpression={(value, operation) => [
-            getCategoryName,
-            operation || "contains",
-            value,
-          ]}
         />
 
         <Column
@@ -263,12 +271,13 @@ export default function ProductsGrid({
             return (
               <span
                 style={{
-                  background: isLow ? "#fee2e2" : "#dcfce7",
-                  color:      isLow ? "#dc2626" : "#16a34a",
+                  background:   isLow ? "#fee2e2" : "#dcfce7",
+                  color:        isLow ? "#dc2626" : "#16a34a",
                   borderRadius: 6,
-                  padding: "2px 8px",
-                  fontWeight: 600,
-                  fontSize: 12,
+                  padding:      "2px 8px",
+                  fontWeight:   600,
+                  fontSize:     12,
+                  display:      "inline-block",
                 }}
               >
                 {value}
@@ -277,192 +286,42 @@ export default function ProductsGrid({
           }}
         />
 
-        <Column dataField="reorderLevel" caption="Reorder" dataType="number" width={100} />
-
         <Column
-          dataField="isActive"
-          caption="Status"
-          dataType="boolean"
+          dataField="reorderLevel"
+          caption="Reorder"
+          dataType="number"
           width={100}
-          cellRender={({ value }) => (
-            <span
-              style={{
-                background: value ? "#dcfce7" : "#f3f4f6",
-                color:      value ? "#16a34a" : "#6b7280",
-                borderRadius: 6,
-                padding: "2px 10px",
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              {value ? "Active" : "Inactive"}
-            </span>
-          )}
         />
+
+        {/* Actions — inline styles used intentionally (DX cell renderer) */}
         <Column
-  caption="Actions"
-  width={140}
-  allowFiltering={false}
-  allowSorting={false}
-  allowExporting={false}
-  cellRender={({ data }) => (
-    <div style={{ display: "flex", gap: 6 }}>
-      <button
-        onClick={() => onEdit(data)}
-        style={{
-          padding: "4px 10px",
-          borderRadius: 6,
-          border: "none",
-          background: "#f3f4f6",
-          color: "#374151",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Edit
-      </button>
-      <button
-        onClick={() => setDeleteConfirm({ open: true, productId: data.id })}
-        style={{
-          padding: "4px 10px",
-          borderRadius: 6,
-          border: "none",
-          background: "#fee2e2",
-          color: "#dc2626",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Delete
-      </button>
-    </div>
-  )}
-/>
-
- 
-
-        {/* <Column
           caption="Actions"
-          width={140}
+          width={150}
           allowFiltering={false}
           allowSorting={false}
           allowExporting={false}
           cellRender={({ data }) => (
             <div style={{ display: "flex", gap: 6 }}>
-              <button
-                onClick={() => onEdit(data)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#f3f4f6",
-                  color: "#374151",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                 Edit
+              <button style={BTN_EDIT}   onClick={() => onEdit(data)}>
+                Edit
               </button>
-              <button
-                onClick={() => onDelete(data.id)}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#fee2e2",
-                  color: "#dc2626",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
+              <button style={BTN_DELETE} onClick={() => setDeleteTarget(data.id)}>
                 Delete
               </button>
             </div>
           )}
-        /> */}
-
-        {/* ── Summary ──────────────────────────────────────────────── */}
-        <Summary>
-          <TotalItem column="name"            summaryType="count" displayFormat="{0} products" />
-          <TotalItem column="price"           summaryType="avg"   valueFormat={{ type: "fixedPoint", precision: 2 }} displayFormat="Avg: Rs {0}" />
-          <TotalItem column="quantityInStock" summaryType="sum"   displayFormat="Total: {0}" />
-        </Summary>
+        />
       </DataGrid>
 
-      {/* ── Delete Confirmation Modal ────────────────────────────── */}
-      {deleteConfirm.open && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 12,
-              padding: 32,
-              maxWidth: 400,
-              boxShadow: "0 20px 25px rgba(0, 0, 0, 0.15)",
-            }}
-          >
-            <h3 style={{ margin: "0 0 12px 0", fontSize: 18, fontWeight: 700, color: "#1f2937" }}>
-              Delete Product?
-            </h3>
-            <p style={{ margin: "0 0 24px 0", fontSize: 14, color: "#6b7280", lineHeight: 1.5 }}>
-              Are you sure you want to delete this product? This action cannot be undone.
-            </p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setDeleteConfirm({ open: false, productId: null })}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 6,
-                  border: "1px solid #e5e7eb",
-                  background: "#f3f4f6",
-                  color: "#374151",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                No, Cancel
-              </button>
-              <button
-                onClick={() => {
-                  onDelete(deleteConfirm.productId);
-                  setDeleteConfirm({ open: false, productId: null });
-                }}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#dc2626",
-                  color: "#fff",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Delete Product?"
+          message="Are you sure you want to delete this product? This action cannot be undone."
+          confirmLabel="Yes, Delete"
+          cancelLabel="No, Cancel"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       )}
     </div>
   );

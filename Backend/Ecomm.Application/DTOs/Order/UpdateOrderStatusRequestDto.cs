@@ -4,5 +4,6 @@ namespace Ecomm.Application.DTOs.Order;
 
 public class UpdateOrderStatusRequestDto
 {
-    public int Status { get; set; }
+    // public int Status { get; set; }
+    public OrderStatus Status { get; set; }
 }

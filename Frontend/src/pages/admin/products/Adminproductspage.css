@@ -1,0 +1,57 @@
+/* ── AdminProductsPage ───────────────────────────────────────────── */
+
+.products-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.products-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.products-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #111;
+}
+
+.products-page-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+/* ── New Product Button ──────────────────────────────────────────── */
+
+.products-new-btn {
+  padding: 9px 18px;
+  border-radius: 9px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.products-new-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────── */
+
+.products-loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 14px;
+}

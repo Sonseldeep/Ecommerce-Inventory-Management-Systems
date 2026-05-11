@@ -45,15 +45,6 @@ public class SignalRRealtimeNotifier : IRealtimeNotifier
         }, ct);
     }
 
-    // public async Task ProductStockUpdatedAsync(Guid productId, string productName, int newStockLevel, CancellationToken ct)
-    // {
-    //     await _notifications.Clients.All.SendAsync("ProductStockUpdated", new 
-    //     {
-    //         Id = productId,
-    //         Name = productName,
-    //         QuantityInStock = newStockLevel
-    //     }, ct);
-    // }
     public async Task ProductStockUpdatedAsync(Guid productId, string productName, int newStockLevel, CancellationToken ct)
     {
         var payload = new 
@@ -66,7 +57,6 @@ public class SignalRRealtimeNotifier : IRealtimeNotifier
         // 1. Send to Admins (Your existing, working code)
         await _notifications.Clients.All.SendAsync("ProductStockUpdated", payload, ct);
 
-        // --- FIX: ALSO SEND TO PUBLIC PRODUCTS HUB ---
         // 2. Send the same message to all public users looking at the products page
         await _products.Clients.All.SendAsync("ProductStockUpdated", payload, ct);
     }

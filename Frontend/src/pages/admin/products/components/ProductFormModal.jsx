@@ -1,42 +1,65 @@
-/* eslint-disable react-hooks/immutability */
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import NumberBox from "devextreme-react/number-box";
 import FileUploader from "devextreme-react/file-uploader";
 import { Validator, RequiredRule } from "devextreme-react/validator";
 
 import { EMPTY_FORM } from "../../categories/constant";
-import {
-  getProductImagesApi,
-  deleteProductImageApi,
-  replaceProductImageApi,
-} from "../../../../api/productApi";
+import { useProductImages } from "../hooks/useProductImages";
+import "./ProductFormModal.css";
 
-const inputStyle = {
-  width: "100%",
-  border: "1.5px solid #e5e7eb",
-  borderRadius: 9,
-  padding: "9px 12px",
-  fontSize: 13,
-  outline: "none",
-  boxSizing: "border-box",
-  color: "#111",
-  background: "#fff",
-};
+// ── Sub-component: active category select ─────────────────────────
+function ActiveCategorySelect({ categories, value, onChange }) {
+  const active = categories.filter((c) => c.isActive === true);
+  const noActive = active.length === 0;
 
-const labelStyle = {
-  display: "block",
-  fontSize: 12,
-  fontWeight: 600,
-  color: "#374151",
-  marginBottom: 5,
-};
+  return (
+    <>
+      <select
+        className="pf-select"
+        value={value}
+        onChange={onChange}
+        required
+        disabled={noActive}
+      >
+        <option value="">
+          {noActive ? "— No Active Categories —" : "— Select Category —"}
+        </option>
+        {active.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+      {noActive && (
+        <p className="pf-helper-text pf-helper-text--error">
+           No active categories available. Contact admin.
+        </p>
+      )}
+    </>
+  );
+}
 
+// ── Sub-component: inactive category warning ───────────────────────
+function InactiveCategoryWarning({ categories, categoryId }) {
+  const selected = categories.find((c) => c.id === categoryId);
+  if (!selected || selected.isActive !== false) return null;
+
+  return (
+    <div className="pf-warning-box">
+      <span className="pf-warning-icon">⚠️</span>
+      <div>
+        <p className="pf-warning-title">Inactive Category</p>
+        <p className="pf-warning-text">
+          This product is assigned to an inactive category:{" "}
+          <strong>{selected.name}</strong>.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────
 export default function ProductFormModal({
   editData,
   categories,
@@ -45,135 +68,78 @@ export default function ProductFormModal({
   onClose,
 }) {
   const isEdit = !!editData;
-  const [form, setForm] = useState(isEdit ? { ...editData } : { ...EMPTY_FORM });
 
-  // ── New files to upload ───────────────────────────────────────────
-  const [files, setFiles] = useState([]);
+  const [form, setForm] = useState(
+    isEdit ? { ...editData } : { ...EMPTY_FORM }
+  );
+  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [selectedFileValue, setSelectedFileValue] = useState([]);
   const [fileError, setFileError] = useState("");
+
   const fileUploaderRef = useRef(null);
 
-  // ── Existing images (when editing) ────────────────────────────────
-  const [existingImages, setExistingImages] = useState([]);
-  const [loadingImages, setLoadingImages] = useState(false);
-  const [imageUpdating, setImageUpdating] = useState(false);
+  // Shared image hook — only active in edit mode
+  const {
+    images: existingImages,
+    loading: loadingImages,
+    updating: imageUpdating,
+    deleteImage,
+    replaceImage,
+    setPrimaryImage,
+  } = useProductImages(isEdit ? editData?.id : null);
 
-  // ── Load existing images when in edit mode ────────────────────────
-  useEffect(() => {
-    if (isEdit && editData?.id) {
-      loadExistingImages(editData.id);
-    }
-  }, [isEdit, editData?.id]);
-
-  const loadExistingImages = async (productId) => {
-    setLoadingImages(true);
-    try {
-      const res = await getProductImagesApi(productId);
-      setExistingImages(res.data?.data || []);
-    } catch (err) {
-      console.error("Failed to load images:", err);
-    } finally {
-      setLoadingImages(false);
-    }
-  };
-
-  // ── Form helpers ──────────────────────────────────────────────────
+  // ── Field helpers ──────────────────────────────────────────────
   const set = (field) => (e) =>
     setForm((s) => ({ ...s, [field]: e.target.value }));
 
   const setDx = (field) => (e) => {
-    const isIntegerField =
-      field === "quantityInStock" || field === "reorderLevel";
-    let value = e.value;
-    if (isIntegerField && value !== null) {
-      value = Math.trunc(value);
-    }
+    const isInteger = field === "quantityInStock" || field === "reorderLevel";
+    const value = isInteger && e.value !== null ? Math.trunc(e.value) : e.value;
     setForm((s) => ({ ...s, [field]: value }));
   };
 
-  // ── Handle delete existing image ──────────────────────────────────
-  const handleDeleteImage = async (imageId) => {
-    if (!window.confirm("Delete this image?")) return;
-
-    setImageUpdating(true);
-    try {
-      await deleteProductImageApi(editData.id, imageId);
-      setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast.success("Image deleted");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to delete image");
-    } finally {
-      setImageUpdating(false);
-    }
+  // ── File handling ──────────────────────────────────────────────
+  const handleFilesChanged = (e) => {
+    const all = e.value || [];
+    setSelectedFileValue(all);
+    const valid = all.filter((f) => f.type.startsWith("image/"));
+    setFilesToUpload(valid);
+    setFileError(
+      valid.length < all.length
+        ? "Only image files are allowed. Invalid files have been ignored."
+        : ""
+    );
   };
 
-  // ── Handle replace existing image ─────────────────────────────────
-  const handleReplaceImage = async (imageId, file) => {
-    if (!file) return;
-
-    setImageUpdating(true);
-    try {
-      const res = await replaceProductImageApi(editData.id, imageId, file, false);
-      
-      // Update the image in the list
-      setExistingImages((prev) =>
-        prev.map((img) =>
-          img.id === imageId
-            ? {
-                ...img,
-                imageUrl: res.data?.data?.imageUrl || img.imageUrl,
-              }
-            : img
-        )
-      );
-      toast.success("Image replaced");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to replace image");
-    } finally {
-      setImageUpdating(false);
-    }
+  const clearFiles = () => {
+    setSelectedFileValue([]);
+    setFilesToUpload([]);
+    setFileError("");
   };
 
-  // ── Handle set as primary ─────────────────────────────────────────
-  const handleSetPrimary = async (imageId) => {
-    if (!editData?.id) return;
-
-    setImageUpdating(true);
-    try {
-      const image = existingImages.find((img) => img.id === imageId);
-      if (!image) return;
-
-      // Fetch the current image and re-upload with isPrimary=true
-      const response = await fetch(image.imageUrl);
-      const blob = await response.blob();
-      const fileType = blob.type || "image/jpeg";
-      const fileName = `product-image-${imageId}`;
-      const file = new File([blob], fileName, { type: fileType });
-
-      await replaceProductImageApi(editData.id, imageId, file, true);
-
-      // Update local state
-      setExistingImages((prev) =>
-        prev.map((img) => ({
-          ...img,
-          isPrimary: img.id === imageId,
-        }))
-      );
-      toast.success("Image set as primary");
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to set as primary");
-    } finally {
-      setImageUpdating(false);
-    }
-  };
-
-  // ── Handle form submit ────────────────────────────────────────────
+  // ── Submit ─────────────────────────────────────────────────────
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Double-check: do not submit if there's a file error.
+
     if (fileError) {
       toast.error("Please resolve the file upload error before submitting.");
       return;
     }
+
+    if (form.categoryId) {
+      const selectedCategory = categories.find((c) => c.id === form.categoryId);
+      if (!selectedCategory) {
+        toast.error("Invalid category selected.");
+        return;
+      }
+      if (selectedCategory.isActive === false) {
+        toast.error(
+          `Cannot add products to inactive category '${selectedCategory.name}'. Contact admin.`
+        );
+        return;
+      }
+    }
+
     const payload = {
       ...form,
       price: Number(form.price),
@@ -186,77 +152,34 @@ export default function ProductFormModal({
       categoryId: form.categoryId === "" ? null : form.categoryId,
     };
 
-    if (isEdit) {
-      delete payload.sku;
-    }
+    if (isEdit) delete payload.sku;
 
-    onSubmit(payload, files);
+    onSubmit(payload, filesToUpload);
   };
 
-  const clearFiles = () => {
-    fileUploaderRef.current.instance.reset();
-    setFiles([]);
-    setFileError("");
-  };
-
+  // ── Render ─────────────────────────────────────────────────────
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,.45)",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className="pf-backdrop"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 18,
-          padding: 28,
-          width: "100%",
-          maxWidth: 500,
-          maxHeight: "90vh",
-          overflowY: "auto",
-          boxShadow: "0 20px 60px rgba(0,0,0,.2)",
-        }}
-      >
+      <div className="pf-container">
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 22,
-          }}
-        >
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+        <div className="pf-header">
+          <h2 className="pf-title">
             {isEdit ? " Edit Product" : "➕ New Product"}
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: 20,
-              cursor: "pointer",
-              color: "#6b7280",
-            }}
-          >
-            ✕
-          </button>
+          <button className="pf-close-btn" onClick={onClose}>✕</button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="pf-form-grid">
+
+            {/* Product Name */}
             <div>
-              <label style={labelStyle}>Product Name *</label>
+              <label className="pf-label">Product Name *</label>
               <input
-                style={inputStyle}
+                className="pf-input"
                 value={form.name}
                 onChange={set("name")}
                 required
@@ -264,51 +187,37 @@ export default function ProductFormModal({
               />
             </div>
 
+            {/* SKU */}
             <div>
-              <label style={labelStyle}>SKU *</label>
+              <label className="pf-label">SKU *</label>
               <input
-                style={{ ...inputStyle, background: isEdit ? "#f9fafb" : "#fff" }}
+                className={`pf-input ${isEdit ? "pf-input--disabled" : ""}`}
                 value={form.sku}
                 onChange={set("sku")}
                 required
                 disabled={isEdit}
                 placeholder="e.g. SKU-001"
               />
-              <p
-                style={{
-                  fontSize: 11,
-                  color: "#9ca3af",
-                  marginTop: 3,
-                  display: isEdit ? "block" : "none",
-                }}
-              >
-                SKU cannot be changed
-              </p>
+              {isEdit && (
+                <p className="pf-helper-text">SKU cannot be changed</p>
+              )}
             </div>
 
+            {/* Description */}
             <div>
-              <label style={labelStyle}>Description</label>
+              <label className="pf-label">Description</label>
               <textarea
-                style={{
-                  ...inputStyle,
-                  resize: "vertical",
-                  minHeight: 72,
-                }}
+                className="pf-textarea"
                 value={form.description}
                 onChange={set("description")}
                 placeholder="Product description…"
               />
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
+            {/* Price + Discount */}
+            <div className="pf-field-row">
               <div>
-                <label style={labelStyle}>Price (Rs.) *</label>
+                <label className="pf-label">Price (Rs.) *</label>
                 <NumberBox
                   value={form.price}
                   onValueChanged={setDx("price")}
@@ -323,7 +232,7 @@ export default function ProductFormModal({
                 </NumberBox>
               </div>
               <div>
-                <label style={labelStyle}>Discount Price (Rs.)</label>
+                <label className="pf-label">Discount Price (Rs.)</label>
                 <NumberBox
                   value={form.discountPrice}
                   onValueChanged={setDx("discountPrice")}
@@ -335,15 +244,10 @@ export default function ProductFormModal({
               </div>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 12,
-              }}
-            >
+            {/* Stock + Reorder */}
+            <div className="pf-field-row">
               <div>
-                <label style={labelStyle}>Stock Qty</label>
+                <label className="pf-label">Stock Qty</label>
                 <NumberBox
                   value={form.quantityInStock}
                   onValueChanged={setDx("quantityInStock")}
@@ -354,7 +258,7 @@ export default function ProductFormModal({
                 />
               </div>
               <div>
-                <label style={labelStyle}>Reorder Level</label>
+                <label className="pf-label">Reorder Level</label>
                 <NumberBox
                   value={form.reorderLevel}
                   onValueChanged={setDx("reorderLevel")}
@@ -366,212 +270,80 @@ export default function ProductFormModal({
               </div>
             </div>
 
+            {/* Category */}
             <div>
-              <label style={labelStyle}>Category *</label>
-              <select
-                style={inputStyle}
+              <label className="pf-label">Category *</label>
+              <ActiveCategorySelect
+                categories={categories}
                 value={form.categoryId}
                 onChange={set("categoryId")}
-                required
-              >
-                <option value="">— Select Category —</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
-            <div>
-              <label style={labelStyle}>Status</label>
-              <select
-                style={inputStyle}
-                value={String(form.isActive)}
-                onChange={(e) =>
-                  setForm((s) => ({
-                    ...s,
-                    isActive: e.target.value === "true",
-                  }))
-                }
-              >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-
-            {/* ─────────────────────────────────────────────────────────
-                EXISTING IMAGES SECTION (EDIT MODE ONLY)
-                ───────────────────────────────────────────────────────── */}
+            {/* Inactive category warning (edit mode) */}
             {isEdit && (
-              <div
-                style={{
-                  border: "1.5px solid #d1d5db",
-                  borderRadius: 10,
-                  padding: "14px",
-                  background: "#fafafa",
-                }}
-              >
-                <label style={labelStyle}>Current Images</label>
+              <InactiveCategoryWarning
+                categories={categories}
+                categoryId={form.categoryId}
+              />
+            )}
+
+            {/* Existing Images (edit mode) */}
+            {isEdit && (
+              <div className="pf-existing-images">
+                <label className="pf-label">Current Images</label>
 
                 {loadingImages ? (
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>
-                    Loading images...
-                  </p>
+                  <p className="pf-state-text">Loading images…</p>
                 ) : existingImages.length === 0 ? (
-                  <p style={{ fontSize: 12, color: "#9ca3af" }}>
-                    No images uploaded yet
-                  </p>
+                  <p className="pf-state-text">No images uploaded yet</p>
                 ) : (
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                      gap: 10,
-                    }}
-                  >
+                  <div className="pf-image-grid">
                     {existingImages.map((image) => (
                       <div
                         key={image.id}
-                        style={{
-                          position: "relative",
-                          borderRadius: 8,
-                          overflow: "hidden",
-                          border: image.isPrimary
-                            ? "2px solid #111"
-                            : "1px solid #e5e7eb",
-                          backgroundColor: "#f3f4f6",
-                          aspectRatio: "1",
-                        }}
+                        className={`pf-image-card ${image.isPrimary ? "pf-image-card--primary" : ""}`}
                       >
-                        {/* Image */}
                         <img
                           src={image.imageUrl}
                           alt="Product"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
+                          className="pf-image"
                         />
-
-                        {/* Primary Badge */}
                         {image.isPrimary && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: 2,
-                              right: 2,
-                              background: "#111",
-                              color: "#fff",
-                              fontSize: 9,
-                              fontWeight: 700,
-                              padding: "2px 4px",
-                              borderRadius: 3,
-                            }}
-                          >
-                            PRIMARY
-                          </div>
+                          <span className="pf-primary-badge">PRIMARY</span>
                         )}
-
-                        {/* Hover Actions */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            background: "rgba(0,0,0,.75)",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 4,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: 0,
-                            transition: "opacity .2s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.opacity = "1")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.opacity = "0")
-                          }
-                        >
-                          {/* Replace Button */}
-                          <label
-                            style={{
-                              background: "#3b82f6",
-                              color: "#fff",
-                              padding: "3px 8px",
-                              borderRadius: 5,
-                              fontSize: 10,
-                              fontWeight: 600,
-                              cursor: imageUpdating
-                                ? "not-allowed"
-                                : "pointer",
-                              border: "none",
-                              textAlign: "center",
-                              display: "block",
-                              opacity: imageUpdating ? 0.5 : 1,
-                            }}
-                          >
-                             Replace
+                        <div className="pf-image-overlay">
+                          <label className="pf-overlay-btn pf-overlay-btn--replace">
+                            Replace
                             <input
                               type="file"
                               accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file)
-                                  handleReplaceImage(image.id, file);
-                              }}
                               style={{ display: "none" }}
                               disabled={imageUpdating}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) replaceImage(image.id, file);
+                                e.target.value = "";
+                              }}
                             />
                           </label>
-
-                          {/* Set Primary Button */}
                           {!image.isPrimary && (
                             <button
                               type="button"
-                              onClick={() => handleSetPrimary(image.id)}
+                              className="pf-overlay-btn pf-overlay-btn--primary"
+                              onClick={() => setPrimaryImage(image.id)}
                               disabled={imageUpdating}
-                              style={{
-                                background: "#16a34a",
-                                color: "#fff",
-                                padding: "3px 8px",
-                                borderRadius: 5,
-                                fontSize: 10,
-                                fontWeight: 600,
-                                cursor: imageUpdating
-                                  ? "not-allowed"
-                                  : "pointer",
-                                border: "none",
-                                opacity: imageUpdating ? 0.5 : 1,
-                              }}
                             >
                                Primary
                             </button>
                           )}
-
-                          {/* Delete Button */}
                           <button
                             type="button"
-                            onClick={() => handleDeleteImage(image.id)}
+                            className="pf-overlay-btn pf-overlay-btn--delete"
+                            onClick={() => deleteImage(image.id)}
                             disabled={imageUpdating}
-                            style={{
-                              background: "#dc2626",
-                              color: "#fff",
-                              padding: "3px 8px",
-                              borderRadius: 5,
-                              fontSize: 10,
-                              fontWeight: 600,
-                              cursor: imageUpdating
-                                ? "not-allowed"
-                                : "pointer",
-                              border: "none",
-                              opacity: imageUpdating ? 0.5 : 1,
-                            }}
                           >
-                             Delete
+                            Delete
                           </button>
                         </div>
                       </div>
@@ -581,125 +353,53 @@ export default function ProductFormModal({
               </div>
             )}
 
-            {/* ─────────────────────────────────────────────────────────
-                NEW IMAGES SECTION (UPLOAD NEW IMAGES)
-                ───────────────────────────────────────────────────────── */}
-            <div
-              style={{
-                border: "1.5px dashed #d1d5db",
-                borderRadius: 10,
-                padding: "12px 14px",
-                background: "#f9fafb",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 4,
-                }}
-              >
-                <label style={labelStyle}>
+            {/* File Uploader */}
+            <div className="pf-file-section">
+              <div className="pf-file-header">
+                <label className="pf-label">
                   {isEdit ? "Add More Images" : "Product Images"}
                 </label>
-                {files.length > 0 && (
+                {selectedFileValue.length > 0 && (
                   <button
                     type="button"
                     onClick={clearFiles}
-                    style={{
-                      background: "#fee2e2",
-                      color: "#dc2626",
-                      border: "none",
-                      borderRadius: 5,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      padding: "3px 8px",
-                      cursor: "pointer",
-                    }}
+                    className="pf-clear-btn"
                   >
                     Clear
                   </button>
                 )}
               </div>
-
               <FileUploader
                 ref={fileUploaderRef}
-                multiple={true}
+                multiple
                 accept="image/*"
                 uploadMode="useForm"
-                onValueChanged={(e) => {
-                  const selectedFiles = e.value || [];
-                  const validFiles = selectedFiles.filter((file) =>
-                    file.type.startsWith("image/")
-                  );
-
-                  if (validFiles.length !== selectedFiles.length) {
-                    setFileError(
-                      "Only image files are allowed. Invalid files were automatically discarded."
-                    );
-                    fileUploaderRef.current.instance.option(
-                      "value",
-                      validFiles
-                    );
-                  } else {
-                    setFileError("");
-                  }
-
-                  setFiles(validFiles);
-                }}
+                value={selectedFileValue}
+                onValueChanged={handleFilesChanged}
                 labelText="Drop image files here or click to browse"
               />
-
               {fileError && (
-                <div style={{ color: "red", fontSize: 12, marginTop: 8 }}>
-                  {fileError}
-                </div>
+                <p className="pf-file-error">{fileError}</p>
               )}
             </div>
 
             {/* Actions */}
-            <div style={{ display: "flex", gap: 10, paddingTop: 6 }}>
+            <div className="pf-actions">
               <button
                 type="submit"
+                className="pf-btn pf-btn--submit"
                 disabled={submitting || imageUpdating || !!fileError}
-                style={{
-                  flex: 1,
-                  padding: "10px 18px",
-                  borderRadius: 9,
-                  border: "none",
-                  cursor:
-                    submitting || imageUpdating || !!fileError
-                      ? "not-allowed"
-                      : "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  background: "#111",
-                  color: "#fff",
-                  opacity:
-                    submitting || imageUpdating || !!fileError ? 0.65 : 1,
-                  transition: "opacity .15s",
-                }}
               >
                 {submitting
                   ? "Saving…"
                   : isEdit
-                    ? "Update Product"
-                    : "Create Product"}
+                  ? "Update Product"
+                  : "Create Product"}
               </button>
               <button
                 type="button"
+                className="pf-btn pf-btn--cancel"
                 onClick={onClose}
-                style={{
-                  padding: "10px 18px",
-                  borderRadius: 9,
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  background: "#f3f4f6",
-                  color: "#374151",
-                }}
               >
                 Cancel
               </button>
@@ -710,227 +410,3 @@ export default function ProductFormModal({
     </div>
   );
 }
-
-// import { useState, useRef } from "react";
-// import NumberBox from "devextreme-react/number-box";
-// import FileUploader from "devextreme-react/file-uploader";
-// import { Validator, RequiredRule } from "devextreme-react/validator";
-
-// import { EMPTY_FORM } from "../../categories/constant";
-
-// const inputStyle = {
-//   width: "100%",
-//   border: "1.5px solid #e5e7eb",
-//   borderRadius: 9,
-//   padding: "9px 12px",
-//   fontSize: 13,
-//   outline: "none",
-//   boxSizing: "border-box",
-//   color: "#111",
-//   background: "#fff",
-// };
-
-// const labelStyle = {
-//   display: "block",
-//   fontSize: 12,
-//   fontWeight: 600,
-//   color: "#374151",
-//   marginBottom: 5,
-// };
-
-// export default function ProductFormModal({ editData, categories, submitting, onSubmit, onClose }) {
-//   const isEdit = !!editData;
-//   const [form, setForm] = useState(isEdit ? { ...editData } : { ...EMPTY_FORM });
-  
-//   const [files, setFiles] = useState([]);
-//   const [fileError, setFileError] = useState("");
-//   const fileUploaderRef = useRef(null);
-
-//   const set = (field) => (e) =>
-//     setForm((s) => ({ ...s, [field]: e.target.value }));
-    
-//   const setDx = (field) => (e) => {
-//     const isIntegerField = field === 'quantityInStock' || field === 'reorderLevel';
-//     let value = e.value;
-//     if (isIntegerField && value !== null) {
-//         value = Math.trunc(value);
-//     }
-//     setForm((s) => ({ ...s, [field]: value }));
-//   }
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     // Double-check: do not submit if there's a file error.
-//     if (fileError) {
-//         toast.error("Please resolve the file upload error before submitting.");
-//         return;
-//     }
-//     const payload = {
-//       ...form,
-//       price: Number(form.price),
-//       discountPrice: form.discountPrice === "" || form.discountPrice === null ? null : Number(form.discountPrice),
-//       quantityInStock: Number(form.quantityInStock),
-//       reorderLevel: Number(form.reorderLevel),
-//       categoryId: form.categoryId === "" ? null : form.categoryId,
-//     };
-
-//     if (isEdit) {
-//       delete payload.sku;
-//     }
-
-//     onSubmit(payload, files);
-//   };
-
-//   const clearFiles = () => {
-//     fileUploaderRef.current.instance.reset();
-//     setFiles([]);
-//     setFileError("");
-//   };
-
-//   return (
-//     <div
-//       style={{
-//         position: "fixed",
-//         inset: 0,
-//         background: "rgba(0,0,0,.45)",
-//         zIndex: 1000,
-//         display: "flex",
-//         alignItems: "center",
-//         justifyContent: "center",
-//       }}
-//       onClick={(e) => e.target === e.currentTarget && onClose()}
-//     >
-//       <div
-//         style={{
-//           background: "#fff",
-//           borderRadius: 18,
-//           padding: 28,
-//           width: "100%",
-//           maxWidth: 500,
-//           maxHeight: "90vh",
-//           overflowY: "auto",
-//           boxShadow: "0 20px 60px rgba(0,0,0,.2)",
-//         }}
-//       >
-//         {/* Header */}
-//         <div
-//           style={{
-//             display: "flex",
-//             justifyContent: "space-between",
-//             alignItems: "center",
-//             marginBottom: 22,
-//           }}
-//         >
-//           <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-//             {isEdit ? " Edit Product" : "➕ New Product"}
-//           </h2>
-//           <button
-//             onClick={onClose}
-//             style={{
-//               background: "none",
-//               border: "none",
-//               fontSize: 20,
-//               cursor: "pointer",
-//               color: "#6b7280",
-//             }}
-//           >
-//             ✕
-//           </button>
-//         </div>
-
-//         {/* Form */}
-//         <form onSubmit={handleSubmit}>
-//           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-//             {/* Other form fields remain unchanged... */}
-//             <div><label style={labelStyle}>Product Name *</label><input style={inputStyle} value={form.name} onChange={set("name")} required placeholder="e.g. Wireless Headphones"/></div>
-//             <div><label style={labelStyle}>SKU *</label><input style={{...inputStyle, background: isEdit ? "#f9fafb" : "#fff"}} value={form.sku} onChange={set("sku")} required disabled={isEdit} placeholder="e.g. SKU-001"/><p style={{fontSize:11, color:"#9ca3af", marginTop:3, display: isEdit ? 'block':'none'}}>SKU cannot be changed</p></div>
-//             <div><label style={labelStyle}>Description</label><textarea style={{...inputStyle, resize:"vertical", minHeight:72}} value={form.description} onChange={set("description")} placeholder="Product description…"/></div>
-//             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}><div><label style={labelStyle}>Price (Rs.) *</label><NumberBox value={form.price} onValueChanged={setDx("price")} format="#,##0.##" min={0} showSpinButtons placeholder="1,000.00"><Validator><RequiredRule message="Price is required"/></Validator></NumberBox></div><div><label style={labelStyle}>Discount Price (Rs.)</label><NumberBox value={form.discountPrice} onValueChanged={setDx("discountPrice")} format="#,##0.##" min={0} showSpinButtons placeholder="Optional"/></div></div>
-//             <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:12}}><div><label style={labelStyle}>Stock Qty</label><NumberBox value={form.quantityInStock} onValueChanged={setDx("quantityInStock")} format="#0" min={0} step={1} showSpinButtons/></div><div><label style={labelStyle}>Reorder Level</label><NumberBox value={form.reorderLevel} onValueChanged={setDx("reorderLevel")} format="#0" min={0} step={1} showSpinButtons/></div></div>
-//             <div><label style={labelStyle}>Category *</label><select style={inputStyle} value={form.categoryId} onChange={set("categoryId")} required><option value="">— Select Category —</option>{categories.map(c=>(<option key={c.id} value={c.id}>{c.name}</option>))}</select></div>
-//             <div><label style={labelStyle}>Status</label><select style={inputStyle} value={String(form.isActive)} onChange={(e)=>setForm(s=>({...s, isActive:e.target.value==="true"}))}><option value="true">Active</option><option value="false">Inactive</option></select></div>
-
-//             {/* --- IMAGES SECTION WITH VALIDATION --- */}
-//             <div
-//               style={{
-//                 border: "1.5px dashed #d1d5db",
-//                 borderRadius: 10,
-//                 padding: "12px 14px",
-//                 background: "#f9fafb",
-//               }}
-//             >
-//               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-//                 <label style={labelStyle}>Product Images</label>
-//                 {files.length > 0 && (
-//                   <button
-//                     type="button"
-//                     onClick={clearFiles}
-//                     style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 5, fontSize: 11, fontWeight: 600, padding: '3px 8px', cursor: 'pointer' }}
-//                   >
-//                     Clear
-//                   </button>
-//                 )}
-//               </div>
-              
-//               <FileUploader
-//                 ref={fileUploaderRef}
-//                 multiple={true}
-//                 accept="image/*"
-//                 uploadMode="useForm"
-//                 onValueChanged={(e) => {
-//                   const selectedFiles = e.value || [];
-//                   const validFiles = selectedFiles.filter(file => file.type.startsWith("image/"));
-                  
-//                   if (validFiles.length !== selectedFiles.length) {
-//                     setFileError("Only image files are allowed. Invalid files were automatically discarded.");
-//                     // This is key: update the component to only show the valid files.
-//                     fileUploaderRef.current.instance.option("value", validFiles);
-//                   } else {
-//                     setFileError("");
-//                   }
-                  
-//                   setFiles(validFiles);
-//                 }}
-//                 labelText="Drop image files here or click to browse"
-//               />
-
-//               {fileError && (
-//                 <div style={{ color: "red", fontSize: 12, marginTop: 8 }}>
-//                   {fileError}
-//                 </div>
-//               )}
-//             </div>
-
-//             {/* Actions */}
-//             <div style={{ display: "flex", gap: 10, paddingTop: 6 }}>
-//               <button
-//                 type="submit"
-//                 // --- THIS IS THE FIX ---
-//                 // Disable the button if submitting OR if there is a file error.
-//                 disabled={submitting || !!fileError}
-//                 style={{
-//                   flex: 1,
-//                   padding: "10px 18px",
-//                   borderRadius: 9,
-//                   border: "none",
-//                   cursor: (submitting || !!fileError) ? "not-allowed" : "pointer",
-//                   fontSize: 13,
-//                   fontWeight: 600,
-//                   background: "#111",
-//                   color: "#fff",
-//                   opacity: (submitting || !!fileError) ? 0.65 : 1,
-//                   transition: "opacity .15s",
-//                 }}
-//               >
-//                 {submitting ? "Saving…" : isEdit ? "Update Product" : "Create Product"}
-//               </button>
-//               <button type="button" onClick={onClose} style={{ padding: "10px 18px", borderRadius: 9, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: "#f3f4f6", color: "#374151" }}>Cancel</button>
-//             </div>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
-

@@ -11,7 +11,8 @@ public static class CategoryMappingExtensions
         return new Category
         {
             Name = dto.Name.Trim(),
-            Description = dto.Description?.Trim()
+            Description = dto.Description?.Trim(),
+            IsActive = dto.IsActive
         };
     }
 
@@ -22,7 +23,8 @@ public static class CategoryMappingExtensions
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            ProductCount = 0
+            ProductCount = 0,
+            IsActive = entity.IsActive
         };
     }
     //  Overload for when you have product count available
@@ -33,7 +35,8 @@ public static class CategoryMappingExtensions
             Id = entity.Id,
             Name = entity.Name,
             Description = entity.Description,
-            ProductCount = productCount
+            ProductCount = productCount,
+            IsActive = entity.IsActive
         };
     }
 }

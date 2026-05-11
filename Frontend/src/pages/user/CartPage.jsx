@@ -78,7 +78,7 @@ export default function CartPage() {
           {/* Product Info */}
           <div className="flex-1">
             <p className="font-semibold text-lg">{i.productName}</p>
-            <p className="text-gray-500 text-sm">₹ {i.unitPrice}</p>
+            <p className="text-gray-500 text-sm">Rs  {i.unitPrice}</p>
           </div>
 
           {/* Quantity Controls */}
@@ -115,7 +115,7 @@ export default function CartPage() {
         <div className="sticky bottom-4 bg-white rounded-2xl shadow-lg p-5 flex items-center justify-between">
           <div>
             <p className="text-gray-500 text-sm">Total</p>
-            <p className="text-2xl font-bold">₹ {total.toFixed(2)}</p>
+            <p className="text-2xl font-bold">Rs  {total.toFixed(2)}</p>
           </div>
 
           <button
