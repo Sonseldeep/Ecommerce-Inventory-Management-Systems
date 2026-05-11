@@ -166,46 +166,6 @@ public class ProductService : IProductService
         _logger.LogInformation("Product updated: {ProductId}", id);
         return updated.ToDto();
     }
-    // public async Task<ProductResponseDto> UpdateAsync(Guid id, UpdateProductRequestDto request, CancellationToken ct = default)
-    // {
-    //     await _updateValidator.ValidateAndThrowAsync(request, ct);
-    //     
-    //     var product = await _products.GetByIdWithDetailsAsync(id, ct);
-    //     if (product is null)
-    //     {
-    //         throw new NotFoundException("Product not found.");
-    //     }
-    //
-    //     var category = await _categories.GetByIdAsync(request.CategoryId, ct);
-    //     if (category is null)
-    //     {
-    //         throw new NotFoundException("Category not found.");
-    //
-    //     }
-    //     product.Name = request.Name.Trim();
-    //     product.Description = request.Description.Trim();
-    //     product.Price = request.Price;
-    //     product.DiscountPrice = request.DiscountPrice;
-    //     product.QuantityInStock = request.QuantityInStock;
-    //     product.ReorderLevel = request.ReorderLevel;
-    //     product.CategoryId = request.CategoryId;
-    //     product.IsActive = request.IsActive;
-    //
-    //     _products.Update(product);
-    //     await _uow.SaveChangesAsync(ct);
-    //
-    //     var updated = await _products.GetByIdWithDetailsAsync(id, ct)
-    //                   ?? throw new NotFoundException("Product not found.");
-    //     
-    //     var response = updated.ToDto();
-    //     
-    //     // Trigger Real-time Notification
-    //     await _realtime.ProductUpdatedAsync(response, ct);
-    //    
-    //
-    //     _logger.LogInformation("Product updated: {ProductId}", id);
-    //     return response;
-    // }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
