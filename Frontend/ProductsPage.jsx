@@ -6,11 +6,11 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import { addToCartApi } from "../../api/cartApi";
-import { getCategoriesApi } from "../../api/categoryApi";
-import { getProductsApi } from "../../api/productApi";
-import { useCart } from "../../context/CartContext";
-import useProductRealtime from "../../hooks/userProductRealtime";
+import { addToCartApi } from "./src/api/cartApi";
+import { getCategoriesApi } from "./src/api/categoryApi";
+import { getProductsApi } from "./src/api/productApi";
+import { useCart } from "./src/context/CartContext";
+import useProductRealtime from "./src/hooks/userProductRealtime";
 
 export default function ProductsPage() {
   const { refreshCartCount } = useCart();
