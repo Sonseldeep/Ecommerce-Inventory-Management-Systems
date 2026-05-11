@@ -1,6 +1,8 @@
-﻿using Ecomm.Application.Interfaces.Repositories;
+﻿using Ecomm.Application.DTOs.Product;
+using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
 using Ecomm.Application.Services;
+using Ecomm.Application.Validators.Product;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +29,9 @@ public static class DependencyInjection
         
         services.AddScoped<IAdminAnalyticsService, AdminAnalyticsService>();
         services.AddScoped<IAdminUserAnalyticsService, AdminUserAnalyticsService>();
+        
+        services.AddScoped<IProductImportService, ProductImportService>();
+        services.AddScoped<IValidator<ProductImportRowDto>, ProductImportRowValidator>();
 
         return services;
     }

@@ -48,15 +48,15 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             var s = query.Search.Trim();
             q = q.Where(x =>
                 x.OrderNumber.Contains(s) ||
-                (x.User != null && x.User.FullName.Contains(s)) ||
-                (x.User != null && x.User.Email.Contains(s)));
+                (x.User.FullName.Contains(s)) ||
+                (x.User.Email.Contains(s)));
         }
 
         if (!string.IsNullOrWhiteSpace(query.CustomerName))
-            q = q.Where(x => x.User != null && x.User.FullName.Contains(query.CustomerName));
+            q = q.Where(x => x.User.FullName.Contains(query.CustomerName));
 
         if (!string.IsNullOrWhiteSpace(query.CustomerEmail))
-            q = q.Where(x => x.User != null && x.User.Email.Contains(query.CustomerEmail));
+            q = q.Where(x => x.User.Email.Contains(query.CustomerEmail));
 
         if (query.Status.HasValue)
             q = q.Where(x => x.OrderStatus == query.Status.Value);

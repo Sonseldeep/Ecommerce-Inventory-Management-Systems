@@ -104,5 +104,8 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         return (items, totalCount);
     }
+    
+    public Task AddRangeAsync(IEnumerable<Product> products, CancellationToken ct = default)
+        => _db.Products.AddRangeAsync(products, ct);
 }
  

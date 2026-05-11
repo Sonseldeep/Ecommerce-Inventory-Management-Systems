@@ -49,4 +49,7 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
         return (items, total);
 
     }
+    public Task<Category?> GetByNameAsync(string name, CancellationToken ct = default)
+        => _db.Categories
+            .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower() && !x.IsDeleted, ct);
 }
