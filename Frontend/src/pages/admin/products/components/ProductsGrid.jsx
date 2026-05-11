@@ -317,8 +317,8 @@ export default function ProductsGrid({
         <ConfirmDialog
           title="Delete Product?"
           message="Are you sure you want to delete this product? This action cannot be undone."
-          confirmLabel="Yes, Delete"
-          cancelLabel="No, Cancel"
+          confirmLabel=" Delete"
+          cancelLabel=" Cancel"
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />

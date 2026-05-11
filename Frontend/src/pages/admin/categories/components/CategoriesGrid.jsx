@@ -206,8 +206,8 @@ export default function CategoriesGrid({
               be undone and may affect associated products.
             </p>
             <div className="delete-dialog__actions">
-              <button className="btn-cancel"         onClick={closeDelete}>No, Cancel</button>
-              <button className="btn-confirm-delete" onClick={confirmDelete}>Yes, Delete</button>
+              <button className="btn-cancel"         onClick={closeDelete}>Cancel</button>
+              <button className="btn-confirm-delete" onClick={confirmDelete}>Delete</button>
             </div>
           </div>
         </div>
