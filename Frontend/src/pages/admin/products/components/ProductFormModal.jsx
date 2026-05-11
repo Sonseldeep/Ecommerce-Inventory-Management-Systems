@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import NumberBox from "devextreme-react/number-box";
@@ -8,9 +9,34 @@ import { EMPTY_FORM } from "../../categories/constant";
 import { useProductImages } from "../hooks/useProductImages";
 import "./ProductFormModal.css";
 
-// ── Sub-component: active category select ─────────────────────────
-function ActiveCategorySelect({ categories, value, onChange }) {
+// ── Sub-component: category select ─────────────────────────
+function CategorySelect({ categories, value, onChange, isEdit }) {
   const active = categories.filter((c) => c.isActive === true);
+  const inactive = categories.filter((c) => c.isActive === false);
+  const selectedCategory = categories.find((c) => c.id === value);
+  const isSelectedInactive = selectedCategory && selectedCategory.isActive === false;
+
+  // For edit mode with inactive category, show only that category and disable
+  if (isEdit && isSelectedInactive) {
+    return (
+      <>
+        <select
+          className="pf-select pf-select--disabled"
+          value={value}
+          disabled={true}
+        >
+          <option value={value}>
+            {selectedCategory.name} (Inactive)
+          </option>
+        </select>
+        <p className="pf-helper-text pf-helper-text--warning">
+          Category is inactive. Cannot change category assignment.
+        </p>
+      </>
+    );
+  }
+
+  // Normal case: show active categories
   const noActive = active.length === 0;
 
   return (
@@ -47,7 +73,7 @@ function InactiveCategoryWarning({ categories, categoryId }) {
 
   return (
     <div className="pf-warning-box">
-      <span className="pf-warning-icon">⚠️</span>
+  
       <div>
         <p className="pf-warning-title">Inactive Category</p>
         <p className="pf-warning-text">
@@ -273,10 +299,11 @@ export default function ProductFormModal({
             {/* Category */}
             <div>
               <label className="pf-label">Category *</label>
-              <ActiveCategorySelect
+              <CategorySelect
                 categories={categories}
                 value={form.categoryId}
                 onChange={set("categoryId")}
+                isEdit={isEdit}
               />
             </div>
 
