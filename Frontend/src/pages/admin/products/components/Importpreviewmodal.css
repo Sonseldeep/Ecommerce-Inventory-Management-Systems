@@ -1,0 +1,412 @@
+/* ── ImportPreviewModal ──────────────────────────────────────────── */
+
+.imp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.imp-container {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+
+.imp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.imp-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #111;
+}
+
+.imp-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.imp-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.imp-close-btn:hover {
+  color: #111;
+}
+
+/* ── Upload Zone ──────────────────────────────────────────────────── */
+
+.imp-upload-zone {
+  border: 1.5px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.imp-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.imp-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.imp-clear-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.imp-clear-btn:hover {
+  opacity: 0.8;
+}
+
+.imp-file-input {
+  width: 100%;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.imp-file-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.imp-upload-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.imp-file-error-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.imp-file-error-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.imp-file-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #374151;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 7px 12px;
+}
+
+.imp-file-icon {
+  font-size: 14px;
+}
+
+.imp-file-name {
+  font-weight: 600;
+  color: #111;
+}
+
+.imp-file-size {
+  color: #9ca3af;
+}
+
+/* ── Parsing State ───────────────────────────────────────────────── */
+
+.imp-state-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #6b7280;
+  padding: 12px 0;
+}
+
+.imp-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #374151;
+  border-radius: 50%;
+  animation: imp-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes imp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Summary Bar ─────────────────────────────────────────────────── */
+
+.imp-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.imp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.imp-badge--valid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.imp-badge--error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.imp-badge--total {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.imp-badge--warn {
+  background: #fef9c3;
+  color: #854d0e;
+  cursor: help;
+}
+
+/* ── Error Hint ──────────────────────────────────────────────────── */
+
+.imp-error-hint {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+/* ── Preview Table ───────────────────────────────────────────────── */
+
+.imp-table-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: auto;
+  max-height: 380px;
+}
+
+.imp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 700px;
+}
+
+.imp-th {
+  background: #f9fafb;
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.imp-th--row {
+  width: 42px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.imp-th--errors {
+  min-width: 160px;
+}
+
+/* ── Table Rows ──────────────────────────────────────────────────── */
+
+.imp-row {
+  transition: background 0.1s;
+}
+
+.imp-row + .imp-row .imp-td {
+  border-top: 1px solid #f3f4f6;
+}
+
+.imp-row--error {
+  background: #fff5f5;
+}
+
+.imp-row--error:hover {
+  background: #fee2e2;
+}
+
+.imp-row--valid:hover {
+  background: #f9fafb;
+}
+
+.imp-td {
+  padding: 8px 12px;
+  color: #111;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.imp-row--error .imp-td {
+  color: #7f1d1d;
+}
+
+.imp-td--row {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 11px;
+  border-right: 1px solid #f3f4f6;
+}
+
+.imp-row--error .imp-td--row {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.imp-td--errors {
+  white-space: normal;
+}
+
+.imp-empty {
+  color: #d1d5db;
+}
+
+/* ── Error List ──────────────────────────────────────────────────── */
+
+.imp-error-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.imp-error-list li {
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 500;
+  padding-left: 10px;
+  position: relative;
+}
+
+.imp-error-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+}
+
+/* ── OK Mark ─────────────────────────────────────────────────────── */
+
+.imp-ok-mark {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────── */
+
+.imp-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.imp-btn {
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.15s;
+}
+
+.imp-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.imp-btn--import {
+  flex: 1;
+  background: #111;
+  color: #fff;
+}
+
+.imp-btn--import:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+.imp-btn--cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.imp-btn--cancel:hover:not(:disabled) {
+  background: #e5e7eb;
+}

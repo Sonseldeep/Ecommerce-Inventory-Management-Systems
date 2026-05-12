@@ -24,4 +24,13 @@ public class ApiResponse<T>
             Message = message
         };
     }
+    public static ApiResponse<T> PartialSuccess<T> (T data, string message = "Partial Success")
+    {
+        return new ApiResponse<T>
+        {
+            Success = false,
+            Message = message, 
+            Data = data
+        };
+    }
 }

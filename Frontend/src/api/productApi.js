@@ -60,9 +60,19 @@ export const replaceProductImageApi = async (productId, imageId, file, isPrimary
   );
 };
 
+export const importProductsApi = (file, hasHeader = true) => {
+  const fd = new FormData();
+  fd.append("file", file);                           // matches IFormFile file in controller
+  return axiosClient.post(
+    `/products/import?hasHeader=${hasHeader}`,
+    fd,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+};
 
 
-// import axiosClient from "./axiosClient";
+
+
 
 // // ... (getProductsApi, getProductByIdApi, etc. remain the same) ...
 // export const getProductsApi = (params = {}) => axiosClient.get("/products", { params });

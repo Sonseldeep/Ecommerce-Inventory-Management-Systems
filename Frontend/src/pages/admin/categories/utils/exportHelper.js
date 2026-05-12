@@ -20,39 +20,36 @@ export async function handleGridExport(e) {
       const workbook = new Workbook();
       const sheet = workbook.addWorksheet("Categories");
 
-      // Add headers
-      const headers = ["Category Name", "Description"];
-      sheet.addRow(headers);
+      sheet.columns = [
+        { header: "Category Name", key: "name", width: 30 },
+        { header: "Description", key: "description", width: 60 },
+      ];
 
-      // Style header row
-      sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-      sheet.getRow(1).fill = {
+      const headerRow = sheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      headerRow.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FF000000" },
       };
 
-      // Add data rows
       allCategories.forEach((category) => {
-        sheet.addRow([
-          category.name,
-          category.description || "",
-        ]);
+        sheet.addRow({
+          name: category.name,
+          description: category.description || "",
+        });
       });
 
-      // Auto-fit columns
-      sheet.columns.forEach((column) => {
-        column.width = 30;
-      });
+      sheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: allCategories.length + 1, column: 2 },
+      };
 
-      sheet.autoFilter.from = "A1:B" + (allCategories.length + 1);
-
-      workbook.xlsx.writeBuffer().then((buffer) => {
-        saveAs(
-          new Blob([buffer], { type: "application/octet-stream" }),
-          `Categories_${new Date().toISOString().split("T")[0]}.xlsx`
-        );
-      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(
+        new Blob([buffer], { type: "application/octet-stream" }),
+        `Categories_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
       e.cancel = true;
     }
 
