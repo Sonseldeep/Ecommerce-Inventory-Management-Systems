@@ -11,4 +11,6 @@ public interface ICategoryRepository : IRepository<Category>
     Task<(IEnumerable<Category> Items, int TotalCount)> SearchAsync(
         CategoryQueryParamsDto query,
         CancellationToken ct = default);
+    Task<Category?> GetByNameAsync(string name, CancellationToken ct = default);
+
 }

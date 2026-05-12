@@ -17,4 +17,8 @@ public class CartRepository : Repository<Cart>, ICartRepository
             .ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted, ct);
     }
+    public Task<Category?> GetByNameAsync(string name, CancellationToken ct = default)
+        => _db.Categories
+            .FirstOrDefaultAsync(x => x.Name.ToLower() == name.ToLower() && !x.IsDeleted, ct);
+
 }
