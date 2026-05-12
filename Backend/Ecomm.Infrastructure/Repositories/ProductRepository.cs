@@ -70,15 +70,15 @@ public class ProductRepository : Repository<Product>, IProductRepository
                 (x.DiscountPrice ?? x.Price) <= query.MaxPrice.Value);
         }
 
-        // -------------------------
+       
         // ACTIVE FILTER
-        // -------------------------
+     
         if (query.IsActive.HasValue)
             q = q.Where(x => x.IsActive == query.IsActive.Value);
 
-        // -------------------------
+     
         // SORTING
-        // -------------------------
+       
         q = (query.SortBy?.ToLower(), query.SortOrder?.ToLower()) switch
         {
             ("price", "asc") => q.OrderBy(x => (x.DiscountPrice ?? x.Price)),
@@ -89,14 +89,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
             _ => q.OrderByDescending(x => x.CreatedAtUtc)
         };
 
-        // -------------------------
+     
         // COUNT BEFORE PAGINATION
-        // -------------------------
+       
         var totalCount = await q.CountAsync(ct);
 
-        // -------------------------
+
         // PAGINATION
-        // -------------------------
+       
         var items = await q
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
@@ -106,6 +106,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
     }
     
     public Task AddRangeAsync(IEnumerable<Product> products, CancellationToken ct = default)
-        => _db.Products.AddRangeAsync(products, ct);
+    {
+        return _db.Products.AddRangeAsync(products, ct);
+    }
+
 }
  
