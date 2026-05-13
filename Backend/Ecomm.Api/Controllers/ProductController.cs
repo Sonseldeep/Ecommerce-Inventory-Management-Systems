@@ -104,7 +104,6 @@ public class ProductsController : ControllerBase
             new ProductImportRequestDto(stream, file.FileName, file.Length, hasHeader),
             ct);
 
-        // ✅ CHECK RESULT STATUS
         if (result is { SuccessCount: 0, FailedCount: > 0 })
         {
             // All rows failed - return 400
