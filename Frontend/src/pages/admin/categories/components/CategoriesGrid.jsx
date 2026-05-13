@@ -43,7 +43,7 @@ function buildDataSource() {
         const sortBy    = sort?.selector || "name";
         const sortOrder = sort?.desc ? "desc" : "asc";
 
-        // ✅ Fix: read from filter, not searchValue
+        // read from filter, not searchValue
         const searchValue = extractSearchValue(loadOptions.filter);
 
         try {
@@ -71,7 +71,7 @@ function buildDataSource() {
 
 const remoteDataSource = buildDataSource();
 
-// ─── Component ────────────────────────────────────────────────────────────────
+//  Component 
 export default function CategoriesGrid({
   gridRef,
   onEdit,
@@ -89,7 +89,7 @@ export default function CategoriesGrid({
   const closeDelete   = ()   => setDeleteConfirm({ open: false, categoryId: null });
   const confirmDelete = ()   => { onDelete(deleteConfirm.categoryId); closeDelete(); };
 
-  // ── Cell renderers ──────────────────────────────────────────────────────────
+  //  Cell renderers 
   const renderProducts = ({ value }) => (
     <span className="products-count">{value ?? 0}</span>
   );
@@ -142,7 +142,7 @@ export default function CategoriesGrid({
           }
         }}
       >
-        {/* ── Toolbar ── */}
+        {/*  Toolbar  */}
         <Toolbar>
           <Item location="before">
             <button className="grid-add-btn" onClick={onAddNew}>+ Add Category</button>
@@ -152,7 +152,7 @@ export default function CategoriesGrid({
           <Item name="exportButton" />
         </Toolbar>
 
-        {/* ── Features ── */}
+        {/*  Features  */}
         <SearchPanel
           visible
           width={220}
@@ -171,8 +171,8 @@ export default function CategoriesGrid({
         />
         <Export enabled formats={["xlsx", "pdf"]} />
 
-        {/* ── Columns ── */}
-        {/* ✅ searchEnabled tells DevExtreme to include these in the filter */}
+        {/*  Columns  */}
+        {/*  searchEnabled tells DevExtreme to include these in the filter */}
         <Column dataField="name"         caption="Category Name" minWidth={150} searchEnabled />
         <Column dataField="productCount" caption="Products"      width={100} dataType="number" cellRender={renderProducts} />
         <Column dataField="description"  caption="Description"   searchEnabled />
@@ -196,7 +196,7 @@ export default function CategoriesGrid({
         </Summary>
       </DataGrid>
 
-      {/* ── Delete confirm dialog ── */}
+      {/*  Delete confirm dialog  */}
       {deleteConfirm.open && (
         <div className="delete-overlay" onClick={closeDelete}>
           <div className="delete-dialog" onClick={(e) => e.stopPropagation()}>

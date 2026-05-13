@@ -1,6 +1,8 @@
 ﻿using Ecomm.Application.DTOs.Admin;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
+using Ecomm.Application.Reports.DTOs;
+using Ecomm.Application.Reports.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ecomm.Application.Services;
@@ -9,42 +11,43 @@ public class AdminUserAnalyticsService : IAdminUserAnalyticsService
 {
     private readonly IUserRepository _users;
     private readonly IOrderRepository _orders;
+    private readonly IReportQuery _reportQuery;
 
-    public AdminUserAnalyticsService(IUserRepository users, IOrderRepository orders)
+    public AdminUserAnalyticsService(
+        IUserRepository users,
+        IOrderRepository orders,
+        IReportQuery reportQuery)
     {
         _users = users;
         _orders = orders;
+        _reportQuery = reportQuery;
     }
 
     public async Task<UserAnalyticsSummaryDto> GetSummaryAsync(int days, CancellationToken ct = default)
     {
-        var since = DateTime.UtcNow.AddDays(-days);
+        var from = DateTime.UtcNow.AddDays(-days);
+        var to = DateTime.UtcNow;
 
         var totalUsers = await _users.Query().CountAsync(ct);
 
-        var orders = await _orders.Query()
-            .Include(o => o.User)
-            .Where(o => !o.IsDeleted && o.CreatedAtUtc >= since)
-            .ToListAsync(ct);
-
-        var topBuyers = orders
-            .GroupBy(o => o.UserId)
-            .Select(g => new UserSpendDto
-            {
-                UserId = g.Key,
-                FullName = g.First().User.FullName,
-                Email = g.First().User.Email,
-                OrdersCount = g.Count(),
-                TotalSpent = g.Sum(x => x.TotalAmount)
-            })
-            .OrderByDescending(x => x.TotalSpent)
-            .Take(10)
-            .ToList();
+        var topBuyers = await _reportQuery.TopBuyersAsync(new ReportFilterDto
+        {
+            FromUtc = from,
+            ToUtc = to,
+            Top = 10
+        }, ct);
 
         return new UserAnalyticsSummaryDto
         {
             TotalUsers = totalUsers,
-            TopBuyers = topBuyers
+            TopBuyers = topBuyers.Select(x => new UserSpendDto
+            {
+                UserId = x.UserId,
+                FullName = x.FullName,
+                Email = x.Email,
+                OrdersCount = x.OrdersCount,
+                TotalSpent = x.TotalSpent
+            }).ToList()
         };
     }
 

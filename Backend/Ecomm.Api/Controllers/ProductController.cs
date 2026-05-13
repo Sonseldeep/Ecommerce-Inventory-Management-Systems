@@ -104,8 +104,47 @@ public class ProductsController : ControllerBase
             new ProductImportRequestDto(stream, file.FileName, file.Length, hasHeader),
             ct);
 
+        if (result is { SuccessCount: 0, FailedCount: > 0 })
+        {
+            // All rows failed - return 400
+            return BadRequest(ApiResponse<ProductImportResultDto>.Fail(
+                "All rows failed validation. No products were imported."));
+        }
+
+        if (result is { FailedCount: > 0, SuccessCount: > 0 })
+        {
+            // Partial success - return 207 Multi-Status
+            return StatusCode(207, ApiResponse<ProductImportResultDto>.Ok(
+                result,
+                $"Partial success: {result.SuccessCount} imported, {result.FailedCount} failed."));
+        }
+
+        // All successful - return 200
         return Ok(ApiResponse<ProductImportResultDto>.Ok(
             result,
-            "Products imported successfully"));
+            "All products imported successfully"));
     }
+    //
+    // [HttpPost("import")]
+    // [Authorize(Roles = "Admin")]
+    // [Consumes("multipart/form-data")]
+    // [RequestSizeLimit(10 * 1024 * 1024)]
+    // public async Task<IActionResult> Import(
+    //     [FromForm] IFormFile? file,
+    //     [FromQuery] bool hasHeader = true,
+    //     CancellationToken ct = default)
+    // {
+    //     if (file is null || file.Length == 0)
+    //         return BadRequest(ApiResponse<string>.Fail("File is required."));
+    //
+    //     await using var stream = file.OpenReadStream();
+    //
+    //     var result = await _importService.ImportAsync(
+    //         new ProductImportRequestDto(stream, file.FileName, file.Length, hasHeader),
+    //         ct);
+    //
+    //     return Ok(ApiResponse<ProductImportResultDto>.Ok(
+    //         result,
+    //         "Products imported successfully"));
+    // }
 }

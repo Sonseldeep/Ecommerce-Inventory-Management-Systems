@@ -1,6 +1,8 @@
 ﻿using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
+using Ecomm.Application.Reports.Interfaces;
 using Ecomm.Infrastructure.Persistence;
+using Ecomm.Infrastructure.Reports.Queries;
 using Ecomm.Infrastructure.Repositories;
 using Ecomm.Infrastructure.Service;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, EmailSender>();
         services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
         services.AddScoped<IEmailOtpService, EmailOtpService>();
+        
+        services.AddScoped<IReportQuery, ReportQuery>();
 
         return services;
     }

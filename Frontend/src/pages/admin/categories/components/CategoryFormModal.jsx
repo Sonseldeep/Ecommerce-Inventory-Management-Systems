@@ -35,7 +35,7 @@ export default function CategoryFormModal({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="modal-card">
-        {/* ── Header ── */}
+        {/*  Header  */}
         <div className="modal-header">
           <h2 className="modal-title">
             {isEdit ? "Edit Category" : "New Category"}
@@ -50,7 +50,7 @@ export default function CategoryFormModal({
           </button>
         </div>
 
-        {/* ── Form ── */}
+        {/*  Form  */}
         <form className="modal-form" onSubmit={handleSubmit}>
           {/* Category Name */}
           <div className="form-field">

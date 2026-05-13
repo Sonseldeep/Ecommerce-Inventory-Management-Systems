@@ -1,6 +1,9 @@
 ﻿using Ecomm.Application.DTOs.Product;
 using Ecomm.Application.Interfaces.Repositories;
 using Ecomm.Application.Interfaces.Services;
+using Ecomm.Application.Reports.Export;
+using Ecomm.Application.Reports.Interfaces;
+using Ecomm.Application.Reports.Services;
 using Ecomm.Application.Services;
 using Ecomm.Application.Validators.Product;
 using FluentValidation;
@@ -32,6 +35,17 @@ public static class DependencyInjection
         
         services.AddScoped<IProductImportService, ProductImportService>();
         services.AddScoped<IValidator<ProductImportRowDto>, ProductImportRowValidator>();
+        
+        services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IReportExporter, ReportExporter>();
+        
+        // Excel Import Services
+        services.AddScoped<IExcelParser, ExcelParser>();
+        services.AddScoped<IImportValidator, ProductImportValidator>();
+        services.AddScoped<IRowDataExtractor, RowDataExtractor>();
+        services.AddScoped<IProductImportContextLoader, ProductImportContextLoader>();
+        services.AddScoped<IProductImportRowProcessor, ProductImportRowProcessor>();
+        services.AddScoped<IProductImportService, ProductImportService>();
 
         return services;
     }
