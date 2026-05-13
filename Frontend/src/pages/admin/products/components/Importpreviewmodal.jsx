@@ -210,7 +210,7 @@ export default function ImportPreviewModal({ onClose, onImportSuccess }) {
       // Show the REAL error so the cause is immediately visible
       const message = err?.message ?? "Unknown parse error";
       console.error("[ImportPreviewModal] parse error:", err);
-      toast.error(`❌ ${message}`, { id: parseToastId, duration: 6000 });
+      toast.error(` ${message}`, { id: parseToastId, duration: 6000 });
 
       setFile(null);
       setPreview(null);
