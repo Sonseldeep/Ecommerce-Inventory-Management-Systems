@@ -17,3 +17,7 @@ export const exportTopBuyers = (payload) =>
 
 export const exportSalesSummary = (payload) =>
   downloadReport("/admin/reports/sales-summary", payload, "sales-summary.xlsx");
+
+
+ const exportCategoryInventorySheets = (payload) =>
+  downloadReport("/admin/reports/category-inventory", payload, "category-inventory.xlsx");
