@@ -65,11 +65,7 @@ public class CartService : ICartService
             throw new NotFoundException("Product not found.");
         }
 
-        if (!product.IsActive)
-        {
-            throw new BadRequestException("Product is inactive.");
-        }
-
+   
         //  DEBUG: Log category info
         _logger.LogInformation(
             "Cart Add: Product {ProductName}, Category is null: {IsCategoryNull}, Category IsActive: {IsActive}",

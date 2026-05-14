@@ -122,10 +122,7 @@ public class OrderService : IOrderService
         var product = await _products.GetByIdAsync(item.ProductId, ct)
             ?? throw new NotFoundException("Product not found.");
 
-        if (!product.IsActive)
-        {
-            throw new BadRequestException($"Product '{product.Name}' is inactive.");
-        }
+      
 
         if (product.QuantityInStock < item.Quantity)
         {

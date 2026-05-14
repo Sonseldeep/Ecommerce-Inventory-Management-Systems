@@ -8,6 +8,5 @@ public record ProductImportRowDto(
     decimal? DiscountPrice,
     int QuantityInStock,
     int ReorderLevel,
-    string CategoryName, 
-    bool IsActive
+    string CategoryName
 );

@@ -155,7 +155,6 @@ public class ProductService : IProductService
         product.QuantityInStock = request.QuantityInStock;
         product.ReorderLevel = request.ReorderLevel;
         product.CategoryId = request.CategoryId;
-        product.IsActive = request.IsActive;
 
         _products.Update(product);
         await _uow.SaveChangesAsync(ct);

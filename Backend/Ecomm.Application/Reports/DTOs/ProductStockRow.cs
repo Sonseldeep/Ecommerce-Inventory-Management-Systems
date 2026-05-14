@@ -6,6 +6,5 @@ public record ProductStockRow(
     string SKU,
     int QuantityInStock,
     int ReorderLevel,
-    string CategoryName,
-    bool IsActive
+    string CategoryName
 );

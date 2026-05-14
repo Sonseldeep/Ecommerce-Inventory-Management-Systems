@@ -14,7 +14,6 @@ public class ReportQuery : IReportQuery
     public async Task<List<InventorySummaryRow>> InventorySummaryAsync(ReportFilterDto f, CancellationToken ct)
     {
         var products = _db.Products.AsNoTracking().Where(p => !p.IsDeleted);
-        if (f.IsActive.HasValue) products = products.Where(p => p.IsActive == f.IsActive);
 
         var total = await products.CountAsync(ct);
         var low = await products.CountAsync(p => p.QuantityInStock > 0 && p.QuantityInStock <= (p.ReorderLevel > 0 ? p.ReorderLevel : 5), ct);
@@ -32,7 +31,7 @@ public class ReportQuery : IReportQuery
     {
         var q = BaseProductQuery(f);
         return await q.Where(p => p.QuantityInStock > 0 && p.QuantityInStock <= (p.ReorderLevel > 0 ? p.ReorderLevel : 5))
-            .Select(p => new ProductStockRow(p.Id, p.Name, p.SKU, p.QuantityInStock, p.ReorderLevel, p.Category!.Name, p.IsActive))
+            .Select(p => new ProductStockRow(p.Id, p.Name, p.SKU, p.QuantityInStock, p.ReorderLevel, p.Category!.Name))
             .Take(f.Top ?? 1000)
             .ToListAsync(ct);
     }
@@ -41,7 +40,7 @@ public class ReportQuery : IReportQuery
     {
         var q = BaseProductQuery(f);
         return await q.Where(p => p.QuantityInStock == 0)
-            .Select(p => new ProductStockRow(p.Id, p.Name, p.SKU, p.QuantityInStock, p.ReorderLevel, p.Category!.Name, p.IsActive))
+            .Select(p => new ProductStockRow(p.Id, p.Name, p.SKU, p.QuantityInStock, p.ReorderLevel, p.Category!.Name))
             .Take(f.Top ?? 1000)
             .ToListAsync(ct);
     }
@@ -161,10 +160,7 @@ public class ReportQuery : IReportQuery
             .Where(p => !p.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(f.CategoryName))
-            q = q.Where(p => p.Category != null && p.Category.Name == f.CategoryName);
-
-        if (f.IsActive.HasValue)
-            q = q.Where(p => p.IsActive == f.IsActive);
+            q = q.Where(p => p.Category.Name == f.CategoryName);
 
         return q;
     }
@@ -198,15 +194,13 @@ public class ReportQuery : IReportQuery
             .Where(p => !p.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(f.CategoryName))
-            products = products.Where(p => p.Category != null && p.Category.Name == f.CategoryName);
-
-        if (f.IsActive.HasValue)
-            products = products.Where(p => p.IsActive == f.IsActive);
+            products = products.Where(p => p.Category.Name == f.CategoryName);
+        
 
         var rows = await products
             .Select(p => new
             {
-                Category = p.Category != null ? p.Category.Name : "Uncategorized",
+                Category = p.Category.Name,
                 p.Id,
                 p.Name,
                 p.SKU,
