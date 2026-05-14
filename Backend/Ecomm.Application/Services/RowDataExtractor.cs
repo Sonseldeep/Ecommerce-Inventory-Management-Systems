@@ -39,8 +39,7 @@ public class RowDataExtractor : IRowDataExtractor
         var categoryName = GetStringValue(row, 8, out var catErrors);
         errors.AddRange(catErrors);
 
-        var isActive = GetBoolValue(row, 9, true, out var boolErrors);
-        errors.AddRange(boolErrors);
+     
 
         var dto = new ProductImportRowDto(
             Name: name ?? string.Empty,
@@ -50,8 +49,7 @@ public class RowDataExtractor : IRowDataExtractor
             DiscountPrice: discountPrice,
             QuantityInStock: quantity ?? 0,
             ReorderLevel: reorderLevel ?? 0,
-            CategoryName: categoryName ?? string.Empty,
-            IsActive: isActive ?? false
+            CategoryName: categoryName ?? string.Empty
         );
 
         return (dto, errors);
@@ -141,38 +139,5 @@ public class RowDataExtractor : IRowDataExtractor
         }
     }
 
-    private bool? GetBoolValue(IXLRow row, int column, bool required, out List<string> errors)
-    {
-        errors = new List<string>();
-        try
-        {
-            var cell = row.Cell(column);
-            if (cell.IsEmpty())
-                return null;
-
-            var strValue = cell.GetString()?.ToLower().Trim();
-            if (strValue is "true" or "yes" or "1")
-                return true;
-            if (strValue is "false" or "no" or "0")
-                return false;
-
-            try
-            {
-                return cell.GetValue<bool>();
-            }
-            catch
-            {
-                if (required)
-                    errors.Add($"Column {column}: Invalid boolean format '{cell.Value}' (expected: true/false, yes/no, 0/1)");
-                return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            if (required)
-                errors.Add($"Column {column}: Invalid boolean - {ex.Message}");
-            _logger.LogWarning("[EXTRACT] Column {Col}: {Error}", column, ex.Message);
-            return null;
-        }
-    }
+  
 }

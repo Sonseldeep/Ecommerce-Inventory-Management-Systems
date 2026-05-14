@@ -17,8 +17,7 @@ public static class ProductMapping
             DiscountPrice = dto.DiscountPrice,
             QuantityInStock = dto.QuantityInStock,
             ReorderLevel = dto.ReorderLevel,
-            CategoryId = dto.CategoryId,
-            IsActive = true
+            CategoryId = dto.CategoryId
         };
     }
 
@@ -36,7 +35,6 @@ public static class ProductMapping
             DiscountPrice = product.DiscountPrice,
             QuantityInStock = product.QuantityInStock,
             ReorderLevel = product.ReorderLevel,
-            IsActive = product.IsActive,
             CategoryId = product.CategoryId,
             CategoryName = product.Category?.Name ?? string.Empty,
             IsCategoryActive = isCategoryActive,

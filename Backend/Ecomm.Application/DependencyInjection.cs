@@ -33,7 +33,6 @@ public static class DependencyInjection
         services.AddScoped<IAdminAnalyticsService, AdminAnalyticsService>();
         services.AddScoped<IAdminUserAnalyticsService, AdminUserAnalyticsService>();
         
-        services.AddScoped<IProductImportService, ProductImportService>();
         services.AddScoped<IValidator<ProductImportRowDto>, ProductImportRowValidator>();
         
         services.AddScoped<IReportService, ReportService>();

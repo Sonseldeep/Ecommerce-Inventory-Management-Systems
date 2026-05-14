@@ -8,6 +8,5 @@ public class UpdateProductRequestDto
     public decimal? DiscountPrice { get; set; }
     public int QuantityInStock { get; set; }
     public int ReorderLevel { get; set; }
-    public bool IsActive { get; set; }
     public Guid CategoryId { get; set; }
 }

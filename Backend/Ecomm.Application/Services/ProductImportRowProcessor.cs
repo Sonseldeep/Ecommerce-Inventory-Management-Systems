@@ -87,7 +87,7 @@ public class ProductImportRowProcessor : IProductImportRowProcessor
             QuantityInStock = dto.QuantityInStock,
             ReorderLevel = dto.ReorderLevel,
             CategoryId = category!.Id,
-            IsActive = dto.IsActive
+           
         };
 
         _logger.LogDebug("[PROCESS] Row {Row}: Valid - {SKU}", rowNumber, product.SKU);

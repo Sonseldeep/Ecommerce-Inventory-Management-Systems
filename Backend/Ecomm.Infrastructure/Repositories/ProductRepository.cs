@@ -71,10 +71,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
         }
 
        
-        // ACTIVE FILTER
      
-        if (query.IsActive.HasValue)
-            q = q.Where(x => x.IsActive == query.IsActive.Value);
 
      
         // SORTING
