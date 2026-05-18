@@ -19,17 +19,12 @@ import StatusToggle from "../../../../components/StatusToggle";
 import "./CategoriesGrid.css";
 import { handleGridExport } from "../utils/exportHelper";
 
-// ─── Search helper ────────────────────────────────────────────────────────────
-// When remoteOperations={true}, DevExtreme sends search via loadOptions.filter:
-//   single field → ["name", "contains", "foo"]
-//   multi field  → [["name","contains","foo"], "or", ["description","contains","foo"]]
 function extractSearchValue(filter) {
   if (!filter) return "";
   if (typeof filter[0] === "string") return filter[2] ?? "";
   return extractSearchValue(filter[0]);
 }
 
-// ─── Remote data source ───────────────────────────────────────────────────────
 function buildDataSource() {
   return new DataSource({
     store: new CustomStore({
@@ -43,7 +38,6 @@ function buildDataSource() {
         const sortBy    = sort?.selector || "name";
         const sortOrder = sort?.desc ? "desc" : "asc";
 
-        // read from filter, not searchValue
         const searchValue = extractSearchValue(loadOptions.filter);
 
         try {
@@ -71,7 +65,6 @@ function buildDataSource() {
 
 const remoteDataSource = buildDataSource();
 
-//  Component 
 export default function CategoriesGrid({
   gridRef,
   onEdit,
@@ -89,7 +82,6 @@ export default function CategoriesGrid({
   const closeDelete   = ()   => setDeleteConfirm({ open: false, categoryId: null });
   const confirmDelete = ()   => { onDelete(deleteConfirm.categoryId); closeDelete(); };
 
-  //  Cell renderers 
   const renderProducts = ({ value }) => (
     <span className="products-count">{value ?? 0}</span>
   );
@@ -142,7 +134,6 @@ export default function CategoriesGrid({
           }
         }}
       >
-        {/*  Toolbar  */}
         <Toolbar>
           <Item location="before">
             <button className="grid-add-btn" onClick={onAddNew}>+ Add Category</button>
@@ -152,7 +143,6 @@ export default function CategoriesGrid({
           <Item name="exportButton" />
         </Toolbar>
 
-        {/*  Features  */}
         <SearchPanel
           visible
           width={220}
@@ -171,8 +161,6 @@ export default function CategoriesGrid({
         />
         <Export enabled formats={["xlsx", "pdf"]} />
 
-        {/*  Columns  */}
-        {/*  searchEnabled tells DevExtreme to include these in the filter */}
         <Column dataField="name"         caption="Category Name" minWidth={150} searchEnabled />
         <Column dataField="productCount" caption="Products"      width={100} dataType="number" cellRender={renderProducts} />
         <Column dataField="description"  caption="Description"   searchEnabled />
@@ -196,7 +184,6 @@ export default function CategoriesGrid({
         </Summary>
       </DataGrid>
 
-      {/*  Delete confirm dialog  */}
       {deleteConfirm.open && (
         <div className="delete-overlay" onClick={closeDelete}>
           <div className="delete-dialog" onClick={(e) => e.stopPropagation()}>
