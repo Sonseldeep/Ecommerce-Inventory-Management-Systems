@@ -33,7 +33,7 @@ public class AddressServiceTests
 
         var dto = new CreateAddressRequestDto
         {
-            FullName = "John",
+            FullName = "Pratik",
             PhoneNumber = "123",
             Line1 = "Line1",
             City = "City",
