@@ -29,10 +29,24 @@ public class AuthServiceTests
     private readonly IValidator<ForgotPasswordRequestDto> _forgotValidator = A.Fake<IValidator<ForgotPasswordRequestDto>>();
     private readonly IValidator<ChangePasswordRequestDto> _changeValidator = A.Fake<IValidator<ChangePasswordRequestDto>>();
 
-    private AuthService CreateSut() => new(
-        _users, _refreshTokens, _passwordHasher, _tokenService, _uow,
-        _emailOtpService, _emailSender, _logger,
-        _registerValidator, _loginValidator, _resetValidator, _forgotValidator, _changeValidator);
+    private AuthService CreateSut()
+    {
+        return new AuthService(
+            _users,
+            _refreshTokens,
+            _passwordHasher,
+            _tokenService,
+            _uow,
+            _emailOtpService,
+            _emailSender,
+            _logger,
+            _registerValidator,
+            _loginValidator,
+            _resetValidator,
+            _forgotValidator,
+            _changeValidator
+        );
+    }
 
     [Fact]
     public async Task RegisterAsync_Should_Create_User_And_Tokens()
