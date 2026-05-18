@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecomm.Infrastructure", "Eco
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecomm.Api", "Ecomm.Api\Ecomm.Api.csproj", "{D3EAD5BC-CFE7-4530-BD1A-8B08C30ECE8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ecomm.Tests", "Ecomm.Tests\Ecomm.Tests.csproj", "{EA69532A-8653-4BD3-8180-251C05A61250}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{D3EAD5BC-CFE7-4530-BD1A-8B08C30ECE8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3EAD5BC-CFE7-4530-BD1A-8B08C30ECE8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3EAD5BC-CFE7-4530-BD1A-8B08C30ECE8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA69532A-8653-4BD3-8180-251C05A61250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA69532A-8653-4BD3-8180-251C05A61250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA69532A-8653-4BD3-8180-251C05A61250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA69532A-8653-4BD3-8180-251C05A61250}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
