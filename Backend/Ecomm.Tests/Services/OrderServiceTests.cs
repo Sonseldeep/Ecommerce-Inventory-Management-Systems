@@ -27,8 +27,22 @@ public class OrderServiceTests
     private readonly IValidator<CheckoutRequestDto> _checkoutValidator = new InlineValidator<CheckoutRequestDto>();
 
     private OrderService CreateSut()
-        => new(_carts, _addresses, _orders, _products, _orderItems, _cartItems, _currentUser,
-            _uow, _logger, _realtime, _checkoutValidator, A.Fake<IValidator<UpdateOrderStatusRequestDto>>());
+    {
+        return new OrderService(
+            _carts,
+            _addresses,
+            _orders,
+            _products,
+            _orderItems,
+            _cartItems,
+            _currentUser,
+            _uow,
+            _logger,
+            _realtime,
+            _checkoutValidator,
+            A.Fake<IValidator<UpdateOrderStatusRequestDto>>()
+        );
+    }
 
     [Fact]
     public async Task CheckoutAsync_Should_Throw_When_Cart_Empty()

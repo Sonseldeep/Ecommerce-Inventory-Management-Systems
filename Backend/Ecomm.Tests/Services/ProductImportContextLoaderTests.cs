@@ -15,10 +15,9 @@ public class ProductImportContextLoaderTests
         var products = A.Fake<IProductRepository>();
         var categories = A.Fake<ICategoryRepository>();
 
-        A.CallTo(() => products.Query()).Returns(AsyncQueryable.Build(new[]
-        {
+        A.CallTo(() => products.Query()).Returns(AsyncQueryable.Build([
             new Product { SKU = "SKU1", IsDeleted = false }
-        }));
+        ]));
 
         var loader = new ProductImportContextLoader(products, categories, A.Fake<Microsoft.Extensions.Logging.ILogger<ProductImportContextLoader>>());
 

@@ -19,8 +19,17 @@ public class ProductImageServiceTests
     private readonly IUnitOfWork _uow = A.Fake<IUnitOfWork>();
     private readonly Microsoft.Extensions.Logging.ILogger<ProductImageService> _logger = A.Fake<Microsoft.Extensions.Logging.ILogger<ProductImageService>>();
 
-    private ProductImageService CreateSut() => new(_products, _images, _fileStorage, _uow, _logger);
-
+    private ProductImageService CreateSut()
+    {
+        return new ProductImageService(
+            _products,
+            _images,
+            _fileStorage,
+            _uow,
+            _logger
+        );
+    }
+    
     [Fact]
     public async Task UploadProductImageAsync_Should_Add_Image()
     {
