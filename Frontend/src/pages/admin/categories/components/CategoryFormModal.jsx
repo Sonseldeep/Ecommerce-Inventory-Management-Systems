@@ -15,10 +15,10 @@ export default function CategoryFormModal({
       ? {
           name: editData.name || "",
           description: editData.description || "",
-         
+
           isActive: editData.isActive ?? true,
         }
-      : { ...EMPTY_FORM }
+      : { ...EMPTY_FORM },
   );
 
   const handleChange = (field) => (e) =>
@@ -54,7 +54,9 @@ export default function CategoryFormModal({
         <form className="modal-form" onSubmit={handleSubmit}>
           {/* Category Name */}
           <div className="form-field">
-            <label className="form-label">Category Name *</label>
+            <label className="form-label">
+              Category Name <span className="text-red-500">*</span>
+            </label>
             <input
               className="form-input"
               value={form.name}
@@ -75,22 +77,16 @@ export default function CategoryFormModal({
             />
           </div>
 
-     
-
           {/* Actions */}
           <div className="modal-actions">
             <button type="submit" className="btn-submit" disabled={submitting}>
               {submitting
                 ? "Saving…"
                 : isEdit
-                ? "Update Category"
-                : "Create Category"}
+                  ? "Update Category"
+                  : "Create Category"}
             </button>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={onClose}
-            >
+            <button type="button" className="btn-secondary" onClick={onClose}>
               Cancel
             </button>
           </div>
@@ -99,5 +95,3 @@ export default function CategoryFormModal({
     </div>
   );
 }
-
-

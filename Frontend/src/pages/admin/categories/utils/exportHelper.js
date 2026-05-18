@@ -5,10 +5,9 @@ import { getCategoriesApi } from "../../../../api/categoryApi";
 
 export async function handleGridExport(e) {
   try {
-    // Fetch ALL categories without pagination
     const res = await getCategoriesApi({
       pageNumber: 1,
-      pageSize: 50000, // Large batch
+      pageSize: 50000, 
       sortBy: "name",
       sortOrder: "asc",
       search: "",
@@ -88,7 +87,6 @@ export async function handleGridExport(e) {
       doc.setFont(undefined, "normal");
       doc.setFontSize(9);
 
-      // Print data rows
       data.forEach((row) => {
         if (yPosition + rowHeight > pageHeight - 10) {
           doc.addPage();

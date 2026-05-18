@@ -114,9 +114,8 @@ export default function OrderCard({ order, onStatusUpdate }) {
         className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
         style={{ borderLeft: `4px solid ${currentConfig?.dotColor || "#e5e7eb"}` }}
       >
-        {/* ── Top section ── */}
+    
         <div className="p-4">
-          {/* Header */}
           <div className="flex justify-between items-start mb-3">
             <div>
               <p className="text-xs font-mono text-gray-400">{order.orderNumber}</p>
@@ -138,7 +137,6 @@ export default function OrderCard({ order, onStatusUpdate }) {
             </span>
           </div>
 
-          {/* Amount */}
           <p className="text-xl font-bold text-gray-900">
             Rs {Number(order.totalAmount || 0).toLocaleString("en-IN", {
               minimumFractionDigits: 2,
@@ -146,7 +144,6 @@ export default function OrderCard({ order, onStatusUpdate }) {
           </p>
         </div>
 
-        {/* ── Products section ── */}
         <div className="border-t border-gray-100">
           <button
             onClick={() => setShowItems((v) => !v)}
@@ -189,7 +186,6 @@ export default function OrderCard({ order, onStatusUpdate }) {
           )}
         </div>
 
-        {/* ── Status control ── */}
         <div className="border-t border-gray-100 px-4 py-3">
           {locked ? (
             <div className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
@@ -215,191 +211,3 @@ export default function OrderCard({ order, onStatusUpdate }) {
   );
 }
 
-
-// v2 
-// import StatusBadge from "../../../../components/StatusBadge";
-// import { ORDER_STATUS_LABELS } from "../../../../constants/orderStatusConfig";
-
-
-// export default function OrderCard({ order, onStatusUpdate }) {
-//   // Normalize status (number → label)
-//   const statusLabel =
-//     typeof order.orderStatus === "number"
-//       ? ORDER_STATUS_LABELS[order.orderStatus]
-//       : order.orderStatus;
-
-//   // Locked states
-//   const isLocked =
-//     statusLabel === "Delivered" || statusLabel === "Cancelled";
-
-//   return (
-//     <div
-//       style={{
-//         background: "#fff",
-//         borderRadius: 12,
-//         padding: 16,
-//         boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-//         display: "flex",
-//         flexDirection: "column",
-//         gap: 10,
-//       }}
-//     >
-//       {/* HEADER */}
-//       <div
-//         style={{
-//           display: "flex",
-//           justifyContent: "space-between",
-//           alignItems: "flex-start",
-//         }}
-//       >
-//         {/* LEFT SIDE */}
-//         <div>
-//           <h3 style={{ margin: 0, fontSize: 16 }}>
-//             Order #{order.orderNumber}
-//           </h3>
-
-//           <p style={{ margin: 0, fontSize: 13, color: "#666" }}>
-//             {order.customerName} ({order.customerEmail})
-//           </p>
-//         </div>
-
-//         {/* RIGHT SIDE BADGE */}
-//         <StatusBadge status={statusLabel} />
-//       </div>
-
-//       {/* AMOUNT */}
-//       <div style={{ fontSize: 18, fontWeight: 700 }}>
-//         Rs  {Number(order.totalAmount || 0).toFixed(2)}
-//       </div>
-
-//       {/* STATUS ACTION AREA */}
-//       <div
-//         style={{
-//           display: "flex",
-//           justifyContent: "flex-end",
-//           alignItems: "center",
-//           gap: 10,
-//           marginTop: 8,
-//         }}
-//       >
-//         {/* SHOW DROPDOWN ONLY IF NOT LOCKED */}
-//         {!isLocked ? (
-//           <select
-//             value={order.orderStatus}
-//             onChange={(e) =>
-//              onStatusUpdate(
-//   order.id,
-//   order.orderStatus,
-//   Number(e.target.value)
-// )
-//             }
-//             style={{
-//               padding: "6px 10px",
-//               borderRadius: 8,
-//               border: "1px solid #ddd",
-//               minWidth: 150,
-//               background: "#fff",
-//             }}
-//           >
-//             <option value={1}>Pending</option>
-//             <option value={2}>Confirmed</option>
-//             <option value={3}>Paid</option>
-//             <option value={4}>Shipped</option>
-//             <option value={5}>Delivered</option>
-//             <option value={6}>Cancelled</option>
-//           </select>
-//         ) : (
-//           <span style={{ fontSize: 12, color: "#888" }}>
-          
-//           </span>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-// import { ORDER_STATUS_LABELS, ORDER_STATUS_ARRAY } from '../constants';
-
-// import StatusBadge from "../../../../components/StatusBadge";
-
-// export default function OrderCard({ order, onStatusUpdate }) {
-//   const statusName = ORDER_STATUS_LABELS[order.orderStatus] || "Pending";
-//   const statusOptions = ORDER_STATUS_ARRAY.map(s => s.name);
-
-//   return (
-//     <div className="bg-white rounded-xl shadow-md p-4 transition-shadow hover:shadow-lg">
-//       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-//         {/* Left Side: Order & Customer Details */}
-//         <div>
-//           <p className="font-semibold text-gray-800">Order #{order.orderNumber}</p>
-//           <p className="text-sm text-gray-600">{order.customerName} ({order.customerEmail})</p>
-//           <p className="text-lg font-bold text-gray-900 mt-1">
-//             Rs  {Number(order.totalAmount || 0).toFixed(2)}
-//           </p>
-//         </div>
-        
-//         {/* Right Side: Status Update */}
-//         <div className="flex items-center gap-2">
-//           <span className="text-sm font-medium text-gray-500">Status:</span>
-//           <select
-//             className="border rounded p-2 bg-gray-50 focus:ring-2 focus:ring-blue-500"
-//             value={statusName}
-//             onChange={(e) => onStatusUpdate(order.id, e.target.value)}
-//           >
-//             {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-//           </select>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-// latest 
-
-
-
-// export default function OrderCard({ order, onStatusUpdate }) {
-//   return (
-//     <div
-//       style={{
-//         background: "#fff",
-//         padding: 16,
-//         borderRadius: 12,
-//         boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-//       }}
-//     >
-//       <h3>Order #{order.orderNumber}</h3>
-
-//       <p>{order.customerName}</p>
-
-//       <p style={{ fontWeight: 700 }}>Rs {order.totalAmount}</p>
-
-//       <StatusBadge status={order.orderStatus} />
-
-//       <select
-//         value={order.orderStatus}
-//         onChange={(e) =>
-//           onStatusUpdate(order.id, order.orderStatus, e.target.value)
-//         }
-//       >
-//         <option>Pending</option>
-//         <option>Confirmed</option>
-//         <option>Paid</option>
-//         <option>Shipped</option>
-//         <option>Delivered</option>
-//         <option>Cancelled</option>
-//       </select>
-//     </div>
-//   );
-// }

@@ -36,7 +36,6 @@ export default function OrdersGrid({ dataSource }) {
       <SearchPanel visible={true} width={240} placeholder="Search Orders..." />
       <Editing mode="cell" allowUpdating={true} />
 
-      {/* --- Columns Definition --- */}
       <Column dataField="orderNumber" caption="Order #" allowEditing={false} />
       <Column dataField="customerName" allowEditing={false} />
       <Column dataField="totalAmount" dataType="number" format="currency" currency="INR" allowEditing={false} />
