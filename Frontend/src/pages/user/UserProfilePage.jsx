@@ -42,7 +42,7 @@ export default function UserProfilePage() {
   const changePassword = async (e) => {
     e.preventDefault();
 
-    // Validation
+   
     if (!formData.currentPassword.trim()) {
       return toast.error("Current password is required");
     }
@@ -91,13 +91,12 @@ export default function UserProfilePage() {
   return (
     <div className="profile-container">
 
-      {/* TITLE */}
       <h1 className="profile-title">My Profile</h1>
 
-      {/* PROFILE CARD */}
+      
       <div className="profile-card">
 
-        {/* LEFT INFO */}
+        
         <div className="profile-info">
           <div className="profile-info-item">
             <p className="profile-info-label">Full Name</p>
@@ -115,7 +114,7 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT STATUS */}
+        
         <div className="profile-status-card">
           <p className="profile-status-label">Email Status</p>
           <p className={`profile-status-value ${profile?.isEmailVerified ? "verified" : "not-verified"}`}>
@@ -124,12 +123,12 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* CHANGE PASSWORD FORM */}
+
       <div className="password-form-container">
         <h2 className="password-form-title">Change Password</h2>
 
         <form onSubmit={changePassword}>
-          {/* Current Password */}
+      
           <div className="password-field">
             <label className="password-field-label">
               Current Password *
@@ -152,7 +151,6 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          {/* New Password */}
           <div className="password-field">
             <label className="password-field-label">
               New Password *
@@ -175,7 +173,7 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          {/* Confirm Password */}
+    
           <div className="password-field">
             <label className="password-field-label">
               Confirm Password *
@@ -198,7 +196,7 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          {/* SUBMIT BUTTON */}
+        
           <Button
             className="password-form-submit"
             text={submitting ? "Updating..." : "Update Password"}

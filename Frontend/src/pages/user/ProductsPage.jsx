@@ -12,6 +12,8 @@ import { getProductsApi } from "../../api/productApi";
 import { useCart } from "../../context/CartContext";
 import useProductRealtime from "../../hooks/userProductRealtime";
 
+import "./ProductsPage.css";
+
 export default function ProductsPage() {
   const { refreshCartCount } = useCart();
 
@@ -88,30 +90,21 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
- 
     loadProducts();
-  }, [
-    search,
-    categoryId,
-    minPrice,
-    maxPrice,
-    sortBy,
-    sortOrder,
-    pageNumber,
-    pageSize,
-  ]);
+  }, [search, categoryId, minPrice, maxPrice, sortBy, sortOrder, pageNumber, pageSize]);
 
   const addToCart = async (productId) => {
-    // Find the product to check category status
-    const product = items.find(p => p.id === productId);
+    const product = items.find((p) => p.id === productId);
     if (!product) {
       toast.error("Product not found");
       return;
     }
 
-    const productCategory = categories.find(c => c.id === product.categoryId);
+    const productCategory = categories.find((c) => c.id === product.categoryId);
     if (productCategory?.isActive === false) {
-      toast.error(`Cannot add '${product.name}' to cart. This product's category ('${product.categoryName}') is temporarily unavailable.`);
+      toast.error(
+        `Cannot add '${product.name}' to cart. This product's category ('${product.categoryName}') is temporarily unavailable.`
+      );
       return;
     }
 
@@ -151,7 +144,7 @@ export default function ProductsPage() {
         return prev;
       });
     },
-    [pageNumber],
+    [pageNumber]
   );
 
   useProductRealtime(handleRealtimeProduct);
@@ -237,10 +230,7 @@ export default function ProductsPage() {
 
         <div className="lg:col-span-4 flex justify-between text-sm text-gray-500">
           <p>{pageInfo}</p>
-          <button
-            onClick={resetFilters}
-            className="border px-3 py-1 rounded-lg"
-          >
+          <button onClick={resetFilters} className="border px-3 py-1 rounded-lg">
             Reset
           </button>
         </div>
@@ -250,30 +240,22 @@ export default function ProductsPage() {
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: pageSize }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-white h-80 rounded-2xl shadow animate-pulse"
-            />
+            <div key={i} className="bg-white h-80 rounded-2xl shadow animate-pulse" />
           ))}
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {items.map((p) => {
             const hasDiscount = p.discountPrice > 0;
-            const finalPrice = hasDiscount
-              ? p.price - p.discountPrice
-              : p.price;
-            const productCategory = categories.find(c => c.id === p.categoryId);
+            const finalPrice = hasDiscount ? p.price - p.discountPrice : p.price;
+            const productCategory = categories.find((c) => c.id === p.categoryId);
             const isCategoryActive = productCategory?.isActive !== false;
 
             return (
               <div key={p.id} className="bg-white rounded-2xl shadow p-4">
                 <Link to={`/products/${p.id}`}>
                   <img
-                    src={
-                      p.images?.[0]?.imageUrl ||
-                      "https://via.placeholder.com/400"
-                    }
+                    src={p.images?.[0]?.imageUrl || "https://via.placeholder.com/400"}
                     className="h-44 w-full object-cover rounded-lg"
                     alt={p.name}
                   />
@@ -281,13 +263,9 @@ export default function ProductsPage() {
 
                 <h2 className="font-semibold mt-2 line-clamp-1">{p.name}</h2>
                 <p className="text-sm text-gray-500">{p.categoryName}</p>
-                <p className="text-xs text-gray-500">
-                  Stock: {p.quantityInStock}
-                </p>
+                <p className="text-xs text-gray-500">Stock: {p.quantityInStock}</p>
                 {!isCategoryActive && (
-                  <p className="text-xs font-bold text-red-500 mt-1">
-                    Limited Stock
-                  </p>
+                  <p className="text-xs font-bold text-red-500 mt-1">Limited Stock</p>
                 )}
 
                 <div className="mt-2 flex justify-between items-center">
