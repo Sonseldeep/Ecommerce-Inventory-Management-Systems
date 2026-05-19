@@ -1,0 +1,164 @@
+.product-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .product-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* LEFT PANEL */
+.product-images {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 10px rgba(0,0,0,0.08);
+  padding: 16px;
+}
+
+.product-main-image {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.product-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.product-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+.product-thumb.active {
+  border: 2px solid #000;
+}
+
+/* RIGHT PANEL */
+.product-details {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 10px rgba(0,0,0,0.08);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.product-category {
+  color: #6b7280;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.product-description {
+  margin-top: 16px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.product-price {
+  margin-top: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.product-stock {
+  font-size: 13px;
+  margin-top: 8px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.product-stock.out {
+  color: #ef4444;
+}
+
+.product-warning {
+  font-size: 13px;
+  margin-top: 6px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* QTY */
+.qty-wrapper {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qty-btn {
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+.qty-btn:hover {
+  background: #f3f4f6;
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-value {
+  width: 32px;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* ACTION */
+.add-cart-btn {
+  margin-top: 32px;
+  width: 100%;
+  background: black;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.add-cart-btn:active {
+  transform: scale(0.97);
+}
+
+.add-cart-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}

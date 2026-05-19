@@ -14,7 +14,6 @@ export default function useProductRealtime(onUpdate) {
     hub.on("ProductCreated", handleCreate);
 
     return () => {
-      // IMPORTANT: remove listeners
       hub.off("ProductUpdated", handleUpdate);
       hub.off("ProductCreated", handleCreate);
 

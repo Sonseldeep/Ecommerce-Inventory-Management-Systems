@@ -96,6 +96,11 @@
   margin-bottom: 20px;
 }
 
+/* ─── Constrain Form Width ─────────────────────────────────────── */
+.password-form-container form {
+  max-width: 480px;
+}
+
 /* ─── Form Fields ─────────────────────────────────────── */
 .password-field {
   margin-bottom: 16px;
@@ -127,8 +132,10 @@
 /* ─── Eye Toggle Button ─────────────────────────────────────── */
 .eye-toggle-btn {
   position: absolute;
-  right: 12px;
-  background: none;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
   border: none;
   cursor: pointer;
   display: flex;
@@ -151,7 +158,8 @@
 
 /* ─── Form Button ─────────────────────────────────────── */
 .password-form-submit {
-  width: 100%;
+  width: auto;
+  min-width: 180px;
   height: 44px;
 }
 

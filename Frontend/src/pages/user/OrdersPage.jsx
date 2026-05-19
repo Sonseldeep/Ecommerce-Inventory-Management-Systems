@@ -352,7 +352,6 @@ const STATUS_LABELS = {
   6: "Cancelled",
 };
 
-/* ─── Helper: paginate page numbers ─── */
 function getPageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages = [1];
@@ -368,7 +367,6 @@ function getPageNumbers(current, total) {
   return pages;
 }
 
-/* ─── Order Card ─── */
 function OrderCard({ order }) {
   const statusNum =
     typeof order.orderStatus === "number"
@@ -421,7 +419,6 @@ function OrderCard({ order }) {
   );
 }
 
-/* ─── Main Page ─── */
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);

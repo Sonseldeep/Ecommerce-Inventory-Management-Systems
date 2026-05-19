@@ -19,7 +19,6 @@ export default function useAdminAnalyticsRealtime(onRefresh) {
     productsHub.on("ProductCreated", refresh);
 
     return () => {
-      // cleanup listeners (CRITICAL)
       notificationsHub.off("OrderPlaced", refresh);
       productsHub.off("ProductUpdated", refresh);
       productsHub.off("ProductCreated", refresh);

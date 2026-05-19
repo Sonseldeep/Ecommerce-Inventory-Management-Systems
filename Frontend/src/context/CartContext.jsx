@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getMyCartApi } from "../api/cartApi";
 import { useAuth } from "./AuthContext";
@@ -20,7 +22,6 @@ export function CartProvider({ children }) {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshCartCount();
   }, [isAuthenticated]);
 
@@ -28,5 +29,4 @@ export function CartProvider({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => useContext(CartContext);

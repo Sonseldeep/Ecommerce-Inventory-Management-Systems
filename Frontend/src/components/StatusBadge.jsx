@@ -1,4 +1,5 @@
 import { ORDER_STATUS } from "../constants/orderStatusConfig";
+import "./StatusBadge.css";
 
 export default function StatusBadge({ status }) {
   if (!status) return null;
@@ -8,21 +9,14 @@ export default function StatusBadge({ status }) {
 
   return (
     <span
+      className="status-badge"
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "4px 10px",
-        borderRadius: 999,
-        fontSize: 12,
-        fontWeight: 600,
         background: config.bgColor,
         color: config.color,
         border: `1px solid ${config.borderColor}`,
-        whiteSpace: "nowrap",
       }}
     >
-      <span>{config.icon}</span>
+      <span className="status-badge__icon">{config.icon}</span>
       {config.label}
     </span>
   );

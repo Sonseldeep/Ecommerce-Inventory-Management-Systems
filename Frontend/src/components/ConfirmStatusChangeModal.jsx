@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 
+import "./ConfirmStatusChangeModal.css";
 
 export default function ConfirmStatusChangeModal({
   currentStatus,
@@ -9,45 +10,25 @@ export default function ConfirmStatusChangeModal({
   isLoading,
 }) {
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 12,
-          width: 400,
-        }}
-      >
-        <h3 style={{ fontWeight: 700, marginBottom: 10 }}>
+    <div className="confirm-modal-overlay">
+      <div className="confirm-modal">
+        <h3 className="confirm-modal__title">
           Confirm Status Change
         </h3>
 
-        <p style={{ fontSize: 14, marginBottom: 20 }}>
+        <p className="confirm-modal__text">
           Change <b>{currentStatus}</b> → <b>{newStatus}</b> ?
         </p>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-          <button onClick={onCancel}>Cancel</button>
+        <div className="confirm-modal__actions">
+          <button onClick={onCancel}>
+            Cancel
+          </button>
 
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            style={{
-              background: "red",
-              color: "#fff",
-              padding: "6px 12px",
-              borderRadius: 6,
-            }}
+            className="confirm-modal__confirm-btn"
           >
             {isLoading ? "Updating..." : "Confirm"}
           </button>
@@ -56,4 +37,3 @@ export default function ConfirmStatusChangeModal({
     </div>
   );
 }
-

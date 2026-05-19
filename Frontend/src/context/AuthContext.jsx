@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 
 import {
   createContext,
@@ -30,7 +31,6 @@ export function AuthProvider({ children }) {
 
   const channel = useMemo(() => new BroadcastChannel("auth"), []);
 
-  // ── useCallback so logout is never stale ──────────────────────────────────
   const clearSession = useCallback(() => {
     localStorage.clear();
     setUser(null);
@@ -40,30 +40,18 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
   try {
     const rt = localStorage.getItem("refreshToken");
-    // We don't "await" this if we want instant UI feedback, 
-    // or we wrap it to ensure the UI updates no matter what.
+   
     if (rt) await logoutApi(rt);
   } catch (err) {
     console.error("Logout API failed", err);
   } finally {
-    // THIS MUST RUN TO AVOID REFRESH
     clearSession();
     channel.postMessage("logout");
     navigate("/login", { replace: true });
   }
 }, [clearSession, channel, navigate]);
 
-  // const logout = useCallback(async () => {
-  //   try {
-  //     const rt = localStorage.getItem("refreshToken");
-  //     if (rt) await logoutApi(rt);
-  //   } catch { /* empty */ }
-  //   clearSession();
-  //   channel.postMessage("logout");
-  //   navigate("/login"); // ✅ always fresh, never stale
-  // }, [clearSession, channel, navigate]);
 
-  // ── Listen for interceptor + cross-tab events ─────────────────────────────
   useEffect(() => {
     const onRefreshed = (e) => {
       setAccessToken(e.detail.accessToken);
@@ -92,7 +80,6 @@ export function AuthProvider({ children }) {
     };
   }, [clearSession, channel, navigate]);
 
-  // ── Auth actions ──────────────────────────────────────────────────────────
   const login = useCallback(async (payload) => {
     const res = await loginApi(payload);
     const data = res.data?.data;
@@ -111,11 +98,11 @@ export function AuthProvider({ children }) {
     return userObj;
   }, []);
 
-  // ── Context value — all deps explicit, never stale ────────────────────────
   const value = useMemo(
     () => ({ user, isAuthenticated, login, logout }),
     [user, isAuthenticated, login, logout]
   );
+
 
   return (
     <AuthContext.Provider value={value}>
@@ -124,5 +111,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

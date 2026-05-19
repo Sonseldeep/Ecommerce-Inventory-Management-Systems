@@ -96,19 +96,16 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      // 1. Call the API to change password
       await changePasswordApi({ currentPassword, newPassword, confirmPassword });
       
       toast.success("Password changed successfully");
 
-      // 2. Trigger the logout from AuthContext
-      // This will clear localStorage, reset state, and navigate to /login
-      // because you defined navigate("/login") inside your logout function.
+
       logout(); 
 
     } catch (err) {
       toast.error(err?.response?.data?.message || "Change password failed");
-      setLoading(false); // Only stop loading if it failed
+      setLoading(false); 
     }
   };
 
