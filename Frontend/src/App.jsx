@@ -23,6 +23,7 @@ import UserProfilePage from "./pages/user/UserProfilePage";
 import AdminDashboardPage from "./pages/AdminDashboard/AdminDashboardPage";
 import AdminCategoriesPage from "./pages/admin/categories/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/admin/orders/AdminOrdersPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -62,7 +63,7 @@ export default function App() {
             </Route>
 
             <Route path="/" element={<Navigate to="/products" replace />} />
-            <Route path="*" element={<Navigate to="/products" replace />} />
+            <Route path="*" element={<NotFoundPage/>} />
           </Routes>
         </CartProvider>
       </AuthProvider>
