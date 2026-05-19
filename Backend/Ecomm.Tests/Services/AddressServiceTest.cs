@@ -47,7 +47,7 @@ public class AddressServiceTests
         var result = await CreateSut().CreateAsync(dto);
 
         // Assert
-        result.FullName.Should().Be("John");
+        result.FullName.Should().Be("Pratik");
 
         A.CallTo(() => _addresses.AddAsync(
                 A<Domain.Entities.Address>._,
